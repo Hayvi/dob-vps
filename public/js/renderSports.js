@@ -71,8 +71,15 @@ function renderSportsList() {
         welcomeScreen.classList.add('hidden');
         gamesContainer.classList.remove('hidden');
         document.getElementById('selectedSportName').textContent = item.dataset.name;
-      } else {
-        loadGames(item.dataset.id, item.dataset.name);
+      } else if (currentMode === 'live') {
+        // Use subscription-based stream for live
+        currentSport = { id: item.dataset.id, name: item.dataset.name };
+        if (typeof startLiveStream === 'function') {
+          startLiveStream(item.dataset.id);
+        }
+        welcomeScreen.classList.add('hidden');
+        gamesContainer.classList.remove('hidden');
+        document.getElementById('selectedSportName').textContent = item.dataset.name;
       }
       closeMobileSidebar();
     });
