@@ -101,7 +101,21 @@ class ForzzaScraper {
                 try {
                     const message = JSON.parse(data.toString());
                     
-                    // Handle subscription updates (messages with subid but no rid)
+                    // Handle subscription updates - Swarm sends them with rid=0 and subid as key in data
+                    if ((message.rid === 0 || message.rid === '0') && message.data && typeof message.data === 'object') {
+                        // Check if data contains subscription IDs as keys
+                        const dataKeys = Object.keys(message.data);
+                        const matchedSubIds = dataKeys.filter(k => this.subscriptions.has(k));
+                        if (matchedSubIds.length > 0) {
+                            this._recordWsMessageKind('subscription_update');
+                            for (const subid of matchedSubIds) {
+                                this._handleSubscriptionUpdateByKey(subid, message.data[subid]);
+                            }
+                            return;
+                        }
+                    }
+                    
+                    // Handle legacy subscription updates (messages with subid but no rid)
                     if (message.subid !== undefined && message.rid === undefined) {
                         this._recordWsMessageKind('subscription_update');
                         this._handleSubscriptionUpdate(message);
@@ -577,6 +591,28 @@ class ForzzaScraper {
         const updateData = message.data;
         if (!updateData) return;
 
+        this._processSubscriptionUpdate(subid, sub, updateData);
+    }
+
+    /**
+     * Handle subscription updates where subid is a key in the data object (rid=0 format)
+     */
+    _handleSubscriptionUpdateByKey(subid, updateData) {
+        const sub = this.subscriptions.get(subid);
+        if (!sub) {
+            console.log(`Received update for unknown subscription ${subid}`);
+            return;
+        }
+
+        if (!updateData) return;
+
+        this._processSubscriptionUpdate(subid, sub, updateData);
+    }
+
+    /**
+     * Common logic for processing subscription updates
+     */
+    _processSubscriptionUpdate(subid, sub, updateData) {
         const isCountOnlySub = Boolean(
             sub && sub.request && sub.request.what &&
             sub.request.what.game === '@count'

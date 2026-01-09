@@ -6,9 +6,6 @@ function applyLiveOddsPayload(payload) {
   const updates = Array.isArray(payload?.updates) ? payload.updates : [];
   if (updates.length === 0) return;
 
-  const selectedServerGameId = selectedGame ? getServerGameId(selectedGame) : null;
-  const skipSelected = Boolean(selectedServerGameId && typeof isLiveGameStreamActive === 'function' && isLiveGameStreamActive());
-
   for (const u of updates) {
     const gid = u?.gameId;
     if (!gid) continue;
@@ -24,10 +21,6 @@ function applyLiveOddsPayload(payload) {
       if (Array.isArray(u?.odds)) g.__mainOdds = u.odds;
       if (typeof u?.markets_count === 'number') g.__mainMarketsCount = u.markets_count;
       g.__mainOddsUpdatedAt = Date.now();
-    }
-
-    if (skipSelected && selectedServerGameId && String(selectedServerGameId) === String(gid)) {
-      continue;
     }
 
     if (typeof updateGameRowOdds === 'function') {

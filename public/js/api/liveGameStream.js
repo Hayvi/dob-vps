@@ -54,7 +54,22 @@ function startLiveGameStream(gameId) {
       const mm = marketsMap ? pickMainMarketFromMap(marketsMap) : null;
       const odds = extract1X2Odds(mm, selectedGame.team1_name, selectedGame.team2_name);
       const marketsCount = typeof data?.market === 'object' ? Object.keys(data.market || {}).length : getMarketsCount(selectedGame);
+      
+      // Update both the selected game data AND the list row immediately
       updateGameRowOdds(serverGameId, odds, marketsCount);
+      
+      // Also update the main games array to keep everything in sync
+      if (Array.isArray(currentGames)) {
+        const gameInList = currentGames.find(g => {
+          const sid = getServerGameId(g);
+          return sid && String(sid) === String(serverGameId);
+        });
+        if (gameInList) {
+          gameInList.__mainOdds = odds;
+          gameInList.__mainMarketsCount = marketsCount;
+          gameInList.__mainOddsUpdatedAt = Date.now();
+        }
+      }
     }
 
     if (typeof showGameDetails === 'function') {
