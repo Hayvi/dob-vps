@@ -1,0 +1,13 @@
+node_modules/
+.DS_Store
+*.log
+.env
+data/
+*.json
+!package.json
+!package-lock.json
+!docs/architecture_inventory.json
+debug_*.js
+test_*.js
+
+check_stats.js

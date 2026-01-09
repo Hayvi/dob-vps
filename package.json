@@ -1,0 +1,30 @@
+{
+  "name": "dob-vps",
+  "version": "2.0.0",
+  "description": "VPS-ready Forzza sports betting scraper with clustering",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "start:cluster": "node cluster.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "compression": "^1.8.1",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "mongoose": "^9.0.2",
+    "uuid": "^13.0.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "fast-check": "^4.5.2",
+    "jest": "^30.2.0"
+  }
+}
