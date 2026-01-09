@@ -105,54 +105,8 @@ async function ensurePrematchSportsLoaded(forceRefresh = false) {
   }
 }
 
-async function ensureCachedSportsLoaded(forceRefresh = false) {
-  if (!forceRefresh && sportsWithCachedGames instanceof Set) return;
-  try {
-    const sportsRes = await fetch(`/api/cached-sports?_=${Date.now()}`, { cache: 'no-store' });
-    if (!sportsRes.ok) {
-      sportsWithCachedGames = null;
-      sportsCountsCached = null;
-      totalGamesCached = null;
-      updateModeButtons();
-      return;
-    }
-
-    const sportsData = await sportsRes.json();
-    const sports = Array.isArray(sportsData?.sports) ? sportsData.sports : [];
-    const names = [];
-    const counts = new Map();
-    for (const s of sports) {
-      if (!s) continue;
-      if (typeof s === 'string') {
-        const name = String(s);
-        names.push(name);
-        counts.set(name.toLowerCase(), 0);
-        continue;
-      }
-      const name = s?.name;
-      if (!name) continue;
-      names.push(String(name));
-      counts.set(String(name).toLowerCase(), Number(s?.count) || 0);
-    }
-
-    sportsWithCachedGames = new Set(names.map(s => String(s).toLowerCase()));
-    sportsCountsCached = counts;
-    totalGamesCached = Number(sportsData?.total_games);
-    if (!Number.isFinite(totalGamesCached)) {
-      totalGamesCached = Array.from(counts.values()).reduce((sum, c) => sum + (Number(c) || 0), 0);
-    }
-    updateModeButtons();
-  } catch (e) {
-    sportsWithCachedGames = null;
-    sportsCountsCached = null;
-    totalGamesCached = null;
-    updateModeButtons();
-  }
-}
-
 async function ensureAllSportsLoaded(forceRefresh = false) {
   await Promise.all([
-    ensureCachedSportsLoaded(forceRefresh),
     ensureLiveSportsLoaded(forceRefresh),
     ensurePrematchSportsLoaded(forceRefresh),
     ensureResultsSportsLoaded(forceRefresh)
@@ -162,7 +116,6 @@ async function ensureAllSportsLoaded(forceRefresh = false) {
 function updateModeButtons() {
   const prematchEl = document.getElementById('modePrematch');
   const liveEl = document.getElementById('modeLive');
-  const cachedEl = document.getElementById('modeCached');
   const resultsEl = document.getElementById('modeResults');
 
   if (prematchEl) {
@@ -170,9 +123,6 @@ function updateModeButtons() {
   }
   if (liveEl) {
     liveEl.textContent = Number.isFinite(totalGamesLive) ? `Live (${totalGamesLive})` : 'Live';
-  }
-  if (cachedEl) {
-    cachedEl.textContent = Number.isFinite(totalGamesCached) ? `Cached (${totalGamesCached})` : 'Cached';
   }
   if (resultsEl) {
     resultsEl.textContent = Number.isFinite(totalGamesResults) ? `Results (${totalGamesResults})` : 'Results';

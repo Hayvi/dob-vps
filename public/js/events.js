@@ -13,12 +13,10 @@ function setupEventListeners() {
 
   const modePrematchEl = document.getElementById('modePrematch');
   const modeLiveEl = document.getElementById('modeLive');
-  const modeCachedEl = document.getElementById('modeCached');
   const modeResultsEl = document.getElementById('modeResults');
 
   if (modePrematchEl) modePrematchEl.addEventListener('click', onModeChanged);
   if (modeLiveEl) modeLiveEl.addEventListener('click', onModeChanged);
-  if (modeCachedEl) modeCachedEl.addEventListener('click', onModeChanged);
   if (modeResultsEl) modeResultsEl.addEventListener('click', onModeChanged);
 
   onModeChanged();

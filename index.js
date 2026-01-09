@@ -19,7 +19,6 @@ const { createSaveSportData } = require('./lib/saveSportData');
 
 const { registerHierarchyRoutes } = require('./routes/hierarchy');
 const { registerMarketRoutes } = require('./routes/markets');
-const { registerCachedRoutes } = require('./routes/cached');
 const { registerLiveCountRoutes, getCountsStreamMetrics } = require('./routes/liveCounts');
 const { registerScrapeRoutes } = require('./routes/scrape');
 const { registerDebugRoutes } = require('./routes/debug');
@@ -68,7 +67,6 @@ const saveSportData = createSaveSportData({ mongoUri, QueryOptimizer });
 
 registerHierarchyRoutes(app, { scraper, hierarchyCache, cacheKey: HIERARCHY_CACHE_KEY });
 registerMarketRoutes(app, { scraper, noStore, pickMainMarket });
-registerCachedRoutes(app, { mongoUri, PaginationHelper, QueryOptimizer });
 registerLiveCountRoutes(app, { scraper, noStore });
 registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData });
 registerPrematchStreamRoutes(app, { scraper, noStore, parseGamesFromData });
