@@ -106,6 +106,7 @@ class ForzzaScraper {
                         // Check if data contains subscription IDs as keys
                         const dataKeys = Object.keys(message.data);
                         const matchedSubIds = dataKeys.filter(k => this.subscriptions.has(k));
+                        
                         if (matchedSubIds.length > 0) {
                             this._recordWsMessageKind('subscription_update');
                             for (const subid of matchedSubIds) {
