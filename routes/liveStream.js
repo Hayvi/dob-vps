@@ -54,11 +54,14 @@ function registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData })
     if (countsInFlight) return;
     countsInFlight = true;
     try {
-      // Fetch live counts
+      // Fetch live counts - exclude sport types 1 and 4 (Forzza's filter)
       const rawLiveData = await scraper.sendRequest('get', {
         source: 'betting',
         what: { sport: ['id', 'name'], game: ['id'] },
-        where: { game: { type: { '@in': [1] } } }
+        where: {
+          sport: { type: { '@nin': [1, 4] } },
+          game: { type: 1 }
+        }
       });
 
       const liveData = rawLiveData?.data?.data ? rawLiveData.data.data : (rawLiveData?.data || rawLiveData);
