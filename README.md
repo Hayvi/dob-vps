@@ -1,8 +1,8 @@
-# Forzza Sports Betting Scraper - VPS Ready
+# Swarm Scraper - Live Sports Data
 
 *VPS-optimized version with clustering for 10k+ concurrent users*
 
-Node/Express backend with clustering support that pulls prematch, live, and cached betting data from the Forzza (Swarm) API, stores it in MongoDB Atlas, and serves real-time updates via Server-Sent Events (SSE).
+Node/Express backend with clustering support that pulls prematch, live, and cached betting data from the BetConstruct Swarm API, stores it in MongoDB Atlas, and serves real-time updates via Server-Sent Events (SSE).
 
 ## 🚀 Quick Start
 
