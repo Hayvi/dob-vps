@@ -59,6 +59,63 @@ function showGameDetails(game) {
 
   const hasMarkets = Boolean(game.market && Object.keys(game.market).length > 0);
   const serverGameId = game.id || game.gameId;
+  const marketsCount = game.markets_count ?? 0;
+  
+  // If no markets and markets_count is 0, show "No markets available"
+  if (!hasMarkets && marketsCount === 0) {
+    const liveTrackerHtml = isLive ? `
+      <div class="live-tracker" id="liveTracker">
+        <div class="live-tracker-head">
+          <div class="live-tracker-title">Live Tracker</div>
+          <div class="live-tracker-meta">
+            <span id="liveTrackerStatus" class="live-tracker-status">Loading...</span>
+          </div>
+        </div>
+        <iframe
+          id="liveTrackerFrame"
+          class="live-tracker-iframe"
+          src="about:blank"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen
+        ></iframe>
+      </div>
+    ` : '';
+
+    content.innerHTML = `
+      <div class="match-header">
+        <div class="match-competition">${game.competition || '-'}</div>
+        <div class="match-teams-detail">
+          <span class="detail-team">${renderTeamColor(shirt1)}${team1}</span>
+          <span class="vs-text">vs</span>
+          <span class="detail-team">${renderTeamColor(shirt2)}${team2}</span>
+        </div>
+        <div class="match-time-detail">
+          ${headerTimeText}
+        </div>
+      </div>
+      ${liveTrackerHtml}
+      <div id="game-stats-container"></div>
+      <div class="no-markets">No events are available at the moment</div>
+    `;
+
+    if (isLive) {
+      ensureLiveTracker(serverGameId);
+      // Still start stream to get stats updates
+      if (typeof startLiveGameStream === 'function') {
+        startLiveGameStream(serverGameId);
+      }
+    } else {
+      stopLiveTracker();
+    }
+
+    const statsContainer = document.getElementById('game-stats-container');
+    if (typeof hydrateGameStatsInDetails === 'function') {
+      hydrateGameStatsInDetails(isLive, statsContainer, serverGameId, team1, team2, game);
+    }
+    return;
+  }
+  
   if (!hasMarkets && serverGameId) {
     const liveTrackerHtml = isLive ? `
       <div class="live-tracker" id="liveTracker">
