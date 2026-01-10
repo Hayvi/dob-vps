@@ -84,9 +84,11 @@ async function loadFilteredPrematchGames() {
 
     if (data.games && data.games.length > 0) {
       renderFilteredGames(data.games, gamesList);
+      updateSidebarCountForFilter(data.games.length);
     } else {
       const label = activeTimeFilter === 'today' ? 'today' : `next ${activeTimeFilter}h`;
       gamesList.innerHTML = `<div class="empty-state">No games ${label}</div>`;
+      updateSidebarCountForFilter(0);
     }
   } catch (e) {
     console.error('Filter error:', e);
@@ -179,6 +181,16 @@ function renderFilteredGames(games, container) {
       }
     });
   });
+}
+
+// Update sidebar count for current sport when filter is active
+function updateSidebarCountForFilter(count) {
+  if (!currentSport) return;
+  const sportItem = document.querySelector(`.sport-item[data-id="${currentSport.id}"]`);
+  if (sportItem) {
+    const countEl = sportItem.querySelector('.sport-count');
+    if (countEl) countEl.textContent = count;
+  }
 }
 
 // Show/hide time filters based on mode
