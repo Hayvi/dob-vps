@@ -164,6 +164,13 @@ function applyPrematchGamesPayload(payload) {
         }
       }
       selectedGame = refreshedSelected;
+      
+      // Check if is_blocked changed - need to re-render details
+      const prevBlocked = previousSelected?.is_blocked === true || previousSelected?.is_blocked === 1;
+      const currBlocked = refreshedSelected?.is_blocked === true || refreshedSelected?.is_blocked === 1;
+      if (prevBlocked !== currBlocked && typeof showGameDetails === 'function') {
+        showGameDetails(selectedGame);
+      }
     }
   }
 

@@ -169,13 +169,20 @@ function applyLiveGamesPayload(payload) {
   if (!selectedGame && selectedServerGameId) {
     clearGameDetails();
   } else if (selectedGame) {
-    const isLive = Number(selectedGame?.type) === 1;
-    if (isLive && typeof getLiveMeta === 'function') {
-      const meta = getLiveMeta(selectedGame);
-      const parts = [meta?.scoreText, meta?.timeText].filter(Boolean);
-      const timeText = `LIVE${parts.length ? ` ${parts.join(' ')}` : ''}`;
-      const timeEl = document.querySelector('#detailsContent .match-time-detail');
-      if (timeEl) timeEl.textContent = timeText;
+    // Check if is_blocked changed - need to re-render details
+    const prevBlocked = previousSelected?.is_blocked === true || previousSelected?.is_blocked === 1;
+    const currBlocked = selectedGame?.is_blocked === true || selectedGame?.is_blocked === 1;
+    if (prevBlocked !== currBlocked && typeof showGameDetails === 'function') {
+      showGameDetails(selectedGame);
+    } else {
+      const isLive = Number(selectedGame?.type) === 1;
+      if (isLive && typeof getLiveMeta === 'function') {
+        const meta = getLiveMeta(selectedGame);
+        const parts = [meta?.scoreText, meta?.timeText].filter(Boolean);
+        const timeText = `LIVE${parts.length ? ` ${parts.join(' ')}` : ''}`;
+        const timeEl = document.querySelector('#detailsContent .match-time-detail');
+        if (timeEl) timeEl.textContent = timeText;
+      }
     }
   }
 }
