@@ -15,7 +15,10 @@ async function withConcurrencyLimit(items, limit, fn) {
 
 function updateGameRowOdds(serverGameId, oddsArr, marketsCount) {
   const oddsContainer = document.querySelector(`.game-odds[data-server-game-id="${CSS.escape(String(serverGameId))}"]`);
-  if (!oddsContainer) return;
+  if (!oddsContainer) {
+    // Game row not in DOM (possibly virtualized out of view)
+    return;
+  }
 
   const oddsBtns = oddsContainer.querySelectorAll('.odd-btn');
 
