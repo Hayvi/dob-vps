@@ -268,11 +268,13 @@ function showGameDetails(game) {
     const cashoutBadge = market?.cashout === 1 ? '<span class="cashout-badge" title="Cashout available">💰</span>' : '';
     const betbuilderBadge = market?.available_for_betbuilder === true ? '<span class="betbuilder-badge" title="Bet Builder">🧩</span>' : '';
     const newBadge = market?.is_new === true ? '<span class="market-new-badge">NEW</span>' : '';
+    const optimalBadge = market?.optimal === true ? '<span class="market-optimal-badge" title="Optimal">⚡</span>' : '';
+    const colorStyle = market?.display_color ? `border-left: 3px solid #${market.display_color};` : '';
 
     return `
-      <div class="market-section ${expanded ? '' : 'collapsed'}" data-market-id="${market?.id}">
+      <div class="market-section ${expanded ? '' : 'collapsed'}" data-market-id="${market?.id}" style="${colorStyle}">
         <div class="market-header" data-market-id="${market?.id}">
-          <span>${market?.name || 'Market'}${newBadge}${cashoutBadge}${betbuilderBadge}</span>
+          <span>${market?.name || 'Market'}${newBadge}${optimalBadge}${cashoutBadge}${betbuilderBadge}</span>
           <span class="market-arrow">▼</span>
         </div>
         <div class="market-events-container">

@@ -3,8 +3,21 @@ function renderDetailsMarketEventsHtml(market, ctx) {
   const marketBlocked = market?.is_blocked === true || market?.is_blocked === 1;
   // Check game-level blocked state from context
   const gameBlocked = ctx.isGameBlocked === true;
+  
+  // Sort events - use home_value/away_value for correct score, otherwise original_order
+  const sortEvents = (a, b) => {
+    // For correct score markets, sort by home_value then away_value
+    if (a.e?.home_value !== undefined && b.e?.home_value !== undefined) {
+      if (a.e.home_value !== b.e.home_value) return a.e.home_value - b.e.home_value;
+      if (a.e.away_value !== undefined && b.e.away_value !== undefined) {
+        return a.e.away_value - b.e.away_value;
+      }
+    }
+    return ctx.sortByOrderAsc(a.e, b.e);
+  };
+  
   const events = market?.event
-    ? Object.entries(market.event).map(([k, e]) => ({ k, e })).sort((a, b) => ctx.sortByOrderAsc(a.e, b.e))
+    ? Object.entries(market.event).map(([k, e]) => ({ k, e })).sort(sortEvents)
     : [];
   const lowerName = ctx.norm(market?.name);
 
@@ -144,8 +157,11 @@ function renderDetailsMarketEventsHtml(market, ctx) {
       `;
   }
 
-  // Default Grid
-  return events.map(({ k, e }) => {
+  // Default Grid - use col_count for layout
+  const colCount = market?.col_count || 3;
+  const mobileColCount = market?.mobile_col_count || Math.min(colCount, 2);
+  
+  return `<div class="events-grid" style="--col-count: ${colCount}; --mobile-col-count: ${mobileColCount};">` + events.map(({ k, e }) => {
     const meta = ctx.getMoveMeta(marketId, k, e?.price);
     const blocked = isEventBlocked(e);
     return `
@@ -154,5 +170,5 @@ function renderDetailsMarketEventsHtml(market, ctx) {
         <div class="event-price">${renderPrice(e, meta)}</div>
       </div>
     `;
-  }).join('');
+  }).join('') + '</div>';
 }

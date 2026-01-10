@@ -1080,3 +1080,24 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+
+
+/* Responsive events grid using col_count */
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--col-count, 3), 1fr);
+  gap: 6px;
+}
+
+@media (max-width: 600px) {
+  .events-grid {
+    grid-template-columns: repeat(var(--mobile-col-count, 2), 1fr);
+  }
+}
+
+
+/* Optimal market badge */
+.market-optimal-badge {
+  margin-left: 6px;
+  color: #ffd700;
+}
