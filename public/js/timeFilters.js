@@ -108,79 +108,168 @@ function renderFilteredGames(games, container) {
     byComp[key].push(g);
   }
 
-  let html = '';
-  for (const [comp, compGames] of Object.entries(byComp)) {
-    html += `<div class="competition-group">
-      <div class="competition-header">${comp} <span class="game-count">(${compGames.length})</span></div>`;
-    
-    for (const g of compGames) {
-      const time = g.start_ts ? new Date(g.start_ts * 1000) : null;
-      const dateStr = time ? time.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }) : '-';
-      const timeStr = time ? time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '-';
-      const fav1 = g.strong_team === 1 ? '<span class="favorite-star">⭐</span>' : '';
-      const fav2 = g.strong_team === 2 ? '<span class="favorite-star">⭐</span>' : '';
-      const roundBadge = g.round ? `<span class="game-round">R${g.round}</span>` : '';
+  // Add pagination controls if many games
+  const totalGames = games.length;
+  const gamesPerPage = 50; // Show 50 games per page
+  const totalPages = Math.ceil(totalGames / gamesPerPage);
+  let currentPage = 1;
 
-      html += `
-        <div class="game-row" data-game-id="${g.id}" data-server-game-id="${g.id}">
-          <div class="game-time">
-            <div class="game-date">${dateStr}${roundBadge}</div>
-            <div class="game-hour">${timeStr}</div>
-          </div>
-          <div class="game-teams">
-            <div class="team-name">${fav1}${g.team1_name || 'Team 1'}</div>
-            <div class="team-name">${fav2}${g.team2_name || 'Team 2'}</div>
-          </div>
-          <div class="game-odds">
-            <div class="more-markets-pill">+${g.markets_count || 0}</div>
-          </div>
-        </div>`;
-    }
+  function renderPage(page = 1) {
+    currentPage = page;
+    const startIdx = (page - 1) * gamesPerPage;
+    const endIdx = startIdx + gamesPerPage;
+    const pageGames = games.slice(startIdx, endIdx);
     
-    html += '</div>';
+    // Group page games by competition
+    const pageByComp = {};
+    for (const g of pageGames) {
+      const key = g.competition || 'Other';
+      if (!pageByComp[key]) pageByComp[key] = [];
+      pageByComp[key].push(g);
+    }
+
+    let html = '';
+    
+    // Add pagination header if needed
+    if (totalPages > 1) {
+      html += `<div class="pagination-header">
+        <div class="pagination-info">Showing ${startIdx + 1}-${Math.min(endIdx, totalGames)} of ${totalGames} games</div>
+        <div class="pagination-controls">`;
+      
+      if (page > 1) {
+        html += `<button class="btn btn-small" onclick="renderFilteredPage(${page - 1})">← Previous</button>`;
+      }
+      
+      // Page numbers (show current and nearby pages)
+      const startPage = Math.max(1, page - 2);
+      const endPage = Math.min(totalPages, page + 2);
+      
+      for (let p = startPage; p <= endPage; p++) {
+        const active = p === page ? 'active' : '';
+        html += `<button class="btn btn-small ${active}" onclick="renderFilteredPage(${p})">${p}</button>`;
+      }
+      
+      if (page < totalPages) {
+        html += `<button class="btn btn-small" onclick="renderFilteredPage(${page + 1})">Next →</button>`;
+      }
+      
+      html += `</div></div>`;
+    }
+
+    // Render games for this page
+    for (const [comp, compGames] of Object.entries(pageByComp)) {
+      const compId = `filtered-comp-${comp.replace(/[^a-zA-Z0-9]/g, '-')}`;
+      html += `<div class="competition-group">
+        <div class="competition-header clickable" onclick="toggleCompetition('${compId}')">
+          <span class="expand-icon">▶</span>
+          ${comp} 
+          <span class="game-count">(${compGames.length})</span>
+        </div>
+        <div class="competition-games collapsed" id="${compId}">`;
+      
+      for (const g of compGames) {
+        const time = g.start_ts ? new Date(g.start_ts * 1000) : null;
+        const dateStr = time ? time.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }) : '-';
+        const timeStr = time ? time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '-';
+        const fav1 = g.strong_team === 1 ? '<span class="favorite-star">⭐</span>' : '';
+        const fav2 = g.strong_team === 2 ? '<span class="favorite-star">⭐</span>' : '';
+        const roundBadge = g.round ? `<span class="game-round">R${g.round}</span>` : '';
+
+        html += `
+          <div class="game-row" data-game-id="${g.id}" data-server-game-id="${g.id}">
+            <div class="game-time">
+              <div class="game-date">${dateStr}${roundBadge}</div>
+              <div class="game-hour">${timeStr}</div>
+            </div>
+            <div class="game-teams">
+              <div class="team-name">${fav1}${g.team1_name || 'Team 1'}</div>
+              <div class="team-name">${fav2}${g.team2_name || 'Team 2'}</div>
+            </div>
+            <div class="game-odds">
+              <div class="more-markets-pill">+${g.markets_count || 0}</div>
+            </div>
+          </div>`;
+      }
+      
+      html += '</div></div>';
+    }
+
+    // Add pagination footer if needed
+    if (totalPages > 1) {
+      html += `<div class="pagination-footer">
+        <div class="pagination-info">Page ${page} of ${totalPages}</div>
+      </div>`;
+    }
+
+    console.log('Setting innerHTML, length:', html.length);
+    container.innerHTML = html;
+    
+    // Scroll to top of container
+    container.scrollTop = 0;
+    
+    // Add click handlers for game rows
+    container.querySelectorAll('.game-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const gameId = row.dataset.gameId;
+        const game = filteredGames.find(g => String(g.id) === String(gameId));
+        if (game) {
+          // Remove previous selection
+          container.querySelectorAll('.game-row.selected').forEach(r => r.classList.remove('selected'));
+          row.classList.add('selected');
+          
+          selectedGame = game;
+          
+          // Start live game stream for markets
+          if (typeof startLiveGameStream === 'function') {
+            startLiveGameStream(gameId);
+          }
+          
+          // Show details
+          if (typeof showGameDetails === 'function') {
+            showGameDetails(game);
+          }
+          
+          // Show panel
+          const panel = document.getElementById('gameDetails');
+          if (panel) {
+            if (typeof isMobileLayout === 'function' && isMobileLayout()) {
+              if (typeof openMobileDetails === 'function') openMobileDetails();
+            } else {
+              panel.classList.remove('hidden');
+            }
+          }
+        }
+      });
+    });
   }
 
-  console.log('Setting innerHTML, length:', html.length);
-  container.innerHTML = html;
+  // Make renderPage function globally accessible
+  window.renderFilteredPage = renderPage;
+  
+  // Add toggle function for competitions
+  window.toggleCompetition = function(compId) {
+    const compEl = document.getElementById(compId);
+    const headerEl = compEl?.previousElementSibling;
+    if (!compEl || !headerEl) return;
+    
+    const isCollapsed = compEl.classList.contains('collapsed');
+    const icon = headerEl.querySelector('.expand-icon');
+    
+    if (isCollapsed) {
+      compEl.classList.remove('collapsed');
+      if (icon) icon.textContent = '▼';
+    } else {
+      compEl.classList.add('collapsed');
+      if (icon) icon.textContent = '▶';
+    }
+  };
+  
+  // Render first page
+  renderPage(1);
   
   // Update count
   const countEl = document.getElementById('gamesCount');
   if (countEl) countEl.textContent = `${games.length} games`;
-  
-  // Add click handlers for game rows
-  container.querySelectorAll('.game-row').forEach(row => {
-    row.addEventListener('click', () => {
-      const gameId = row.dataset.gameId;
-      const game = filteredGames.find(g => String(g.id) === String(gameId));
-      if (game) {
-        // Remove previous selection
-        container.querySelectorAll('.game-row.selected').forEach(r => r.classList.remove('selected'));
-        row.classList.add('selected');
-        
-        selectedGame = game;
-        
-        // Start live game stream for markets
-        if (typeof startLiveGameStream === 'function') {
-          startLiveGameStream(gameId);
-        }
-        
-        // Show details
-        if (typeof showGameDetails === 'function') {
-          showGameDetails(game);
-        }
-        
-        // Show panel
-        const panel = document.getElementById('gameDetails');
-        if (panel) {
-          if (typeof isMobileLayout === 'function' && isMobileLayout()) {
-            if (typeof openMobileDetails === 'function') openMobileDetails();
-          } else {
-            panel.classList.remove('hidden');
-          }
-        }
-      }
-    });
-  });
 }
 
 // Update sidebar count for current sport when filter is active

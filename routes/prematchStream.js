@@ -20,11 +20,9 @@ function registerPrematchStreamRoutes(app, { scraper, noStore, parseGamesFromDat
     function parseGamesFromRawData(rawData, sportName) {
         let games = parseGamesFromData(rawData, sportName);
         
-        // Filter to prematch only using Forzza's exact logic
-        games = games.filter(g => {
-            return g?.visible_in_prematch === 1 || [0, 2].includes(Number(g?.type));
-        });
-
+        // No additional filtering needed - Swarm API subscription already applies Forzza's exact filter:
+        // game: { '@or': [{ 'visible_in_prematch': 1 }, { 'type': { '@in': [0, 2] } }] }
+        
         games.forEach((g, idx) => {
             g.__clientId = String(g.id ?? g.gameId ?? idx);
         });
