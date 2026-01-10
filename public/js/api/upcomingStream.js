@@ -31,6 +31,10 @@ function startUpcomingStream(hours = 2) {
   stopUpcomingStream();
   upcomingStreamHours = hours;
 
+  // Hide welcome screen, show games container
+  if (typeof welcomeScreen !== 'undefined') welcomeScreen.classList.add('hidden');
+  if (typeof gamesContainer !== 'undefined') gamesContainer.classList.remove('hidden');
+
   const es = new EventSource(`/api/upcoming-stream?hours=${hours}&_=${Date.now()}`);
   upcomingStreamSource = es;
 
