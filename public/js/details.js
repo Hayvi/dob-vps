@@ -22,13 +22,13 @@ function showGameDetails(game) {
   }
   const startTime = game.start_ts ? new Date(game.start_ts * 1000) : null;
   const team1 = game.team1_name || game.name || 'Team 1';
+  const team2 = game.team2_name || (game.team1_name ? 'Team 2' : '-');
   
   // Replace "Team 1"/"Team 2" with actual team names in market names (like Forzza)
   const replaceTeamNames = (name) => {
     if (!name) return name;
     return name.replace(/Team 1/gi, team1).replace(/Team 2/gi, team2);
   };
-  const team2 = game.team2_name || (game.team1_name ? 'Team 2' : '-');
 
   // Team shirt colors
   const info = game.info || {};
