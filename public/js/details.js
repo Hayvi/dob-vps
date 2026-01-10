@@ -150,48 +150,84 @@ function showGameDetails(game) {
     return hasOU;
   };
 
-  // --- Market Categorization ---
-  // We'll group markets into tabs: All, Match, Totals, Handicaps, Combos/Others
-  // Note: "All" is a virtual tab that shows everything (or filtered). 
-  // For now, let's just make specific tabs.
+  // --- Market Categorization using display_key ---
+  // display_key values from API: WINNER, TOTALS, HANDICAP, CORRECT SCORE, DOUBLE CHANCE, 
+  // BOTHTEAMTOSCORE, DRAWNOBET, ODD/EVEN, HALFTIME/FULLTIME, CORNERTOTALS, CORNERWINNER, etc.
 
   const categories = {
     'All': [],
-    'Match': [],
+    'Winner': [],
     'Totals': [],
-    'Handicaps': [],
-    'Halves': []
+    'Handicap': [],
+    'Halves': [],
+    'Corners': [],
+    'Cards': [],
+    'Other': []
   };
 
-  // Helper to categorize
+  // Map display_key to category
+  const displayKeyToCategory = {
+    'WINNER': 'Winner',
+    'DOUBLE CHANCE': 'Winner',
+    'DRAWNOBET': 'Winner',
+    'BOTHTEAMTOSCORE': 'Winner',
+    'CORRECT SCORE': 'Winner',
+    'WINNERREST': 'Winner',
+    'NEXTGOALTOSCORE': 'Winner',
+    'ODD/EVEN': 'Winner',
+    'HALFTIME/FULLTIME': 'Halves',
+    'H/F DOUBLE CHANCE': 'Halves',
+    'TOTALS': 'Totals',
+    'TEAM_TOTALS': 'Totals',
+    'TOTAL': 'Totals',
+    'HANDICAP': 'Handicap',
+    'HANDICAP3WAY': 'Handicap',
+    'CORNERTOTALS': 'Corners',
+    'CORNERWINNER': 'Corners',
+    'CORNERHANDICAP': 'Corners',
+    'CORNERODD/EVEN': 'Corners',
+    'CARDSTOTALS': 'Cards',
+    'CARDSWINNER': 'Cards',
+    'CARDSHANDICAP': 'Cards',
+    'CARDSDOUBLE CHANCE': 'Cards'
+  };
+
   const categorizeMarket = (m) => {
+    categories['All'].push(m);
+    
+    const displayKey = (m?.display_key || '').toUpperCase();
+    const displaySubKey = (m?.display_sub_key || '').toUpperCase();
+    
+    // Use display_key for categorization
+    if (displayKeyToCategory[displayKey]) {
+      categories[displayKeyToCategory[displayKey]].push(m);
+      return;
+    }
+    
+    // Check display_sub_key for period/half markets
+    if (displaySubKey === 'PERIOD' || displaySubKey === 'HALF') {
+      categories['Halves'].push(m);
+      return;
+    }
+    
+    // Fallback to name-based categorization
     const name = norm(m?.name);
     const type = norm(m?.type);
-
-    // Always add to All
-    categories['All'].push(m);
-
-    // Match - 1X2, DC, BTTS, DNB, Scores
-    if (name.includes('1x2') || name.includes('winner') || name.includes('double chance') || name.includes('draw no bet') || name.includes('both teams to score') || name.includes('correct score') || name.includes('match result')) {
-      categories['Match'].push(m);
-      return;
-    }
-
-    // Handicaps
-    if (name.includes('handicap') || type.includes('handicap')) {
-      categories['Handicaps'].push(m);
-      return;
-    }
-
-    // Totals
-    if (name.includes('total') || name.includes('over') || name.includes('under') || name.includes('goal')) {
-      categories['Totals'].push(m);
-      return;
-    }
-
-    // Halves
-    if (name.includes('half') || name.includes('1st') || name.includes('2nd')) {
+    
+    if (name.includes('half') || name.includes('1st') || name.includes('2nd') || name.includes('period')) {
       categories['Halves'].push(m);
+    } else if (name.includes('corner')) {
+      categories['Corners'].push(m);
+    } else if (name.includes('card')) {
+      categories['Cards'].push(m);
+    } else if (name.includes('handicap') || type.includes('handicap')) {
+      categories['Handicap'].push(m);
+    } else if (name.includes('total') || name.includes('over') || name.includes('under')) {
+      categories['Totals'].push(m);
+    } else if (name.includes('winner') || name.includes('result') || name.includes('1x2') || name.includes('score')) {
+      categories['Winner'].push(m);
+    } else {
+      categories['Other'].push(m);
     }
   };
 
