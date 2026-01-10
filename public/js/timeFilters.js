@@ -83,6 +83,7 @@ async function loadFilteredPrematchGames() {
     }
 
     if (data.games && data.games.length > 0) {
+      console.log('Sample game data:', data.games[0]); // Debug log
       renderFilteredGames(data.games, gamesList);
       updateSidebarCountForFilter(data.games.length);
     } else {
@@ -182,8 +183,8 @@ function renderFilteredGames(games, container) {
               <div class="game-hour">${timeStr}</div>
             </div>
             <div class="game-teams">
-              <div class="team-name">${fav1}${g.team1_name || 'Team 1'}</div>
-              <div class="team-name">${fav2}${g.team2_name || 'Team 2'}</div>
+              <div class="team-name">${fav1}${g.team1_name || g.name || 'TBD'}</div>
+              <div class="team-name">${fav2}${g.team2_name || (g.team1_name ? 'TBD' : '-')}</div>
             </div>
             <div class="game-odds">
               <div class="more-markets-pill">+${g.markets_count || 0}</div>

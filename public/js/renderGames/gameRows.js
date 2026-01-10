@@ -16,11 +16,11 @@ function renderGamesInCompetition(games) {
     // Check if teams should be reversed
     const reversed = game.teams_reversed === true || game.is_reversed === true;
     const team1 = reversed 
-      ? (game.team2_name || 'Team 2')
-      : (game.team1_name || game.name || 'Team 1');
+      ? (game.team2_name || game.name || 'TBD')
+      : (game.team1_name || game.name || 'TBD');
     const team2 = reversed
-      ? (game.team1_name || game.name || 'Team 1')
-      : (game.team2_name || (game.team1_name ? 'Team 2' : '-'));
+      ? (game.team1_name || game.name || 'TBD')
+      : (game.team2_name || (game.team1_name ? 'TBD' : '-'));
     
     const gameId = game.__clientId;
     const isLive = Boolean(game.type === 1);

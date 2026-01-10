@@ -363,9 +363,9 @@ async function showResultDetails(gameId, rowEl) {
     <div class="result-details">
       <div class="result-header">
         <div class="result-teams">
-          <span class="team">${game?.team1_name || 'Team 1'}</span>
+          <span class="team">${game?.team1_name || game?.name || 'TBD'}</span>
           <span class="result-score">${game?.scores || '-'}</span>
-          <span class="team">${game?.team2_name || 'Team 2'}</span>
+          <span class="team">${game?.team2_name || (game?.team1_name ? 'TBD' : '-')}</span>
         </div>
         <div class="result-meta">
           ${game?.competition || ''} • ${game?.region || ''}
