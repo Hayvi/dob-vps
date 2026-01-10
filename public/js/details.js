@@ -282,7 +282,35 @@ function showGameDetails(game) {
     `;
   };
 
-  const marketsHtml = visibleMarkets.map(m => renderMarketSection(m)).join('');
+  // Group markets by group_name
+  const groupMarkets = (markets) => {
+    const groups = new Map();
+    for (const m of markets) {
+      const groupName = m.group_name || 'Other';
+      if (!groups.has(groupName)) {
+        groups.set(groupName, { order: m.group_order ?? 999, markets: [] });
+      }
+      groups.get(groupName).markets.push(m);
+    }
+    // Sort groups by group_order
+    return Array.from(groups.entries())
+      .sort((a, b) => a[1].order - b[1].order)
+      .map(([name, data]) => ({ name, markets: data.markets }));
+  };
+
+  const marketGroups = groupMarkets(visibleMarkets);
+  
+  // Render grouped or flat based on whether we have multiple groups
+  const hasMultipleGroups = marketGroups.length > 1 && marketGroups.some(g => g.name !== 'Other');
+  
+  const marketsHtml = hasMultipleGroups
+    ? marketGroups.map(group => `
+        <div class="market-group">
+          <div class="market-group-header">${group.name}</div>
+          ${group.markets.map(m => renderMarketSection(m)).join('')}
+        </div>
+      `).join('')
+    : visibleMarkets.map(m => renderMarketSection(m)).join('');
 
   const liveTrackerHtml = isLive ? `
     <div class="live-tracker" id="liveTracker">

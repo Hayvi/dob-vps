@@ -1062,3 +1062,21 @@
   font-weight: 600;
   text-transform: uppercase;
 }
+
+
+/* Market groups */
+.market-group {
+  margin-bottom: 16px;
+}
+
+.market-group-header {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-blue);
+  padding: 8px 12px;
+  background: var(--bg-tertiary);
+  border-left: 3px solid var(--accent-blue);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
