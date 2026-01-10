@@ -1,6 +1,7 @@
 function groupGames(games) {
   const grouped = {};
   const compMeta = {}; // Track competition metadata for sorting
+  const regionMeta = {}; // Track region metadata for sorting
   
   games.forEach(game => {
     const region = game.region || 'Other';
@@ -8,6 +9,7 @@ function groupGames(games) {
     if (!grouped[region]) {
       grouped[region] = {};
       compMeta[region] = {};
+      regionMeta[region] = { order: game.region_order };
     }
     if (!grouped[region][competition]) {
       grouped[region][competition] = [];
@@ -49,7 +51,22 @@ function groupGames(games) {
     grouped[region] = sorted;
   }
   
-  return grouped;
+  // Sort regions by order and return as array of [region, competitions, meta]
+  const sortedRegions = Object.entries(grouped)
+    .map(([region, competitions]) => [region, competitions, regionMeta[region] || {}])
+    .sort((a, b) => {
+      const oA = a[2].order ?? 9999;
+      const oB = b[2].order ?? 9999;
+      return oA - oB;
+    });
+  
+  // Convert back to object with sorted order
+  const sortedGrouped = {};
+  for (const [region, competitions] of sortedRegions) {
+    sortedGrouped[region] = competitions;
+  }
+  
+  return sortedGrouped;
 }
 
 function renderRegionsTree(grouped, options = {}) {
