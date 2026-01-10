@@ -1,5 +1,6 @@
 // Time filter state
 let activeTimeFilter = 0; // 0 = all, or hours
+let filteredGames = []; // Store filtered games for click handlers
 
 function initTimeFilters() {
   const container = document.getElementById('timeFilters');
@@ -57,6 +58,13 @@ async function loadFilteredPrematchGames() {
   if (!gamesList) return;
   gamesList.classList.remove('hidden');
   
+  // Update header
+  const sportNameEl = document.getElementById('selectedSportName');
+  if (sportNameEl) {
+    const icon = (typeof sportIcons !== 'undefined' && sportIcons[sportName]) || '⚽';
+    sportNameEl.innerHTML = `${icon} ${sportName}`;
+  }
+  
   gamesList.innerHTML = '<div class="loading">Loading filtered games...</div>';
 
   try {
@@ -88,6 +96,7 @@ async function loadFilteredPrematchGames() {
 
 function renderFilteredGames(games, container) {
   console.log('renderFilteredGames called with', games.length, 'games');
+  filteredGames = games; // Store for click handlers
   
   // Group by competition
   const byComp = {};
@@ -135,6 +144,25 @@ function renderFilteredGames(games, container) {
   // Update count
   const countEl = document.getElementById('gamesCount');
   if (countEl) countEl.textContent = `${games.length} games`;
+  
+  // Add click handlers for game rows
+  container.querySelectorAll('.game-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const gameId = row.dataset.gameId;
+      const game = filteredGames.find(g => String(g.id) === String(gameId));
+      if (game) {
+        // Remove previous selection
+        container.querySelectorAll('.game-row.selected').forEach(r => r.classList.remove('selected'));
+        row.classList.add('selected');
+        
+        // Show details
+        if (typeof showGameDetails === 'function') {
+          selectedGame = game;
+          showGameDetails(game);
+        }
+      }
+    });
+  });
 }
 
 // Show/hide time filters based on mode
