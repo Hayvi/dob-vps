@@ -43,24 +43,31 @@ function startUpcomingStream(hours = 2) {
   upcomingStreamSource = es;
 
   es.onopen = () => {
-    console.log('Upcoming SSE connected');
+    console.log('[Upcoming] SSE connected, readyState:', es.readyState);
   };
 
   es.onerror = (err) => {
-    console.error('Upcoming SSE error:', err);
+    console.error('[Upcoming] SSE error:', err, 'readyState:', es.readyState);
+  };
+
+  es.onmessage = (evt) => {
+    console.log('[Upcoming] Generic message event:', evt.type, evt.data?.substring(0, 100));
   };
 
   es.addEventListener('games', (evt) => {
-    console.log('Received games event:', evt.data?.substring(0, 200));
-    if (currentMode !== 'upcoming') return;
+    console.log('[Upcoming] games event received, data length:', evt.data?.length);
+    if (currentMode !== 'upcoming') {
+      console.log('[Upcoming] Ignoring - mode is', currentMode);
+      return;
+    }
     const payload = safeJsonParse(evt?.data);
     if (!payload) {
-      console.error('Failed to parse games payload');
+      console.error('[Upcoming] Failed to parse games payload');
       return;
     }
 
     upcomingGames = payload.games || [];
-    console.log('Upcoming games received:', upcomingGames.length);
+    console.log('[Upcoming] Parsed', upcomingGames.length, 'games');
     renderUpcomingGames();
   });
 
