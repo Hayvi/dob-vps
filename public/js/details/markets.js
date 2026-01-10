@@ -11,12 +11,16 @@ function renderDetailsMarketEventsHtml(market, ctx) {
   // Helper to check if event is blocked (game, market, or event level)
   const isEventBlocked = (e) => gameBlocked || marketBlocked || e?.is_blocked === true || e?.is_blocked === 1;
   
+  // Helper to check if event is boosted
+  const isBoosted = (e) => typeof isEventBoosted === 'function' && isEventBoosted(e?.id);
+  
   // Helper to render price or lock icon
   const renderPrice = (e, meta) => {
     if (isEventBlocked(e)) {
       return '<span class="odd-locked">🔒</span>';
     }
-    return `<span class="odd-number">${ctx.formatOddValue(e?.price)}</span><span class="odd-arrow">${meta?.arrow || ''}</span>`;
+    const boostedBadge = isBoosted(e) ? '<span class="boosted-event" title="Boosted odds">🔥</span>' : '';
+    return `${boostedBadge}<span class="odd-number">${ctx.formatOddValue(e?.price)}</span><span class="odd-arrow">${meta?.arrow || ''}</span>`;
   };
 
   // 1. Handicap Table Renderer

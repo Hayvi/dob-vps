@@ -286,6 +286,16 @@ class ForzzaScraper {
         return res?.data?.details || [];
     }
 
+    /**
+     * Get boosted/enhanced odds selections
+     * @returns {Promise<Object>} - Map of gameId -> boosted selections
+     */
+    async getBoostedSelections() {
+        await this.ensureConnection();
+        const res = await this.sendRequest('get_boosted_selections', {});
+        return res?.data?.details || {};
+    }
+
     async getGames(competitionId) {
         const response = await this.sendRequest('get', {
             source: 'betting',

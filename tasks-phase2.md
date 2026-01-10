@@ -8,8 +8,8 @@
 
 ## 🚀 New Features
 
-- [ ] 4. Add `get_boosted_selections` API endpoint for enhanced odds
-- [ ] 5. Display boosted odds badge (🔥) on boosted events
+- [x] 4. Add `get_boosted_selections` API endpoint for enhanced odds ✅ DONE
+- [x] 5. Display boosted odds badge (🔥) on boosted events ✅ DONE
 - [ ] 6. Add time-range filters (@gte/@lte) for "Today", "Next 24h" games
 
 ## Missing Fields (Lower Priority)

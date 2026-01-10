@@ -433,6 +433,17 @@
   margin-left: 4px;
 }
 
+.boosted-event {
+  font-size: 10px;
+  margin-right: 2px;
+  animation: pulse-boost 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-boost {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.1); }
+}
+
 .game-odds {
   display: flex;
   gap: 6px;

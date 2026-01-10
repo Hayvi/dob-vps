@@ -28,6 +28,7 @@ const { registerLiveTrackerRoutes } = require('./routes/liveTracker');
 const { registerLiveStreamRoutes } = require('./routes/liveStream');
 const { registerResultsRoutes } = require('./routes/results');
 const { registerPrematchStreamRoutes } = require('./routes/prematchStream');
+const { registerBoostedRoutes } = require('./routes/boosted');
 
 const app = express();
 app.set('etag', false);
@@ -72,6 +73,7 @@ registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData });
 registerPrematchStreamRoutes(app, { scraper, noStore, parseGamesFromData });
 registerLiveTrackerRoutes(app);
 registerResultsRoutes(app, { scraper, noStore });
+registerBoostedRoutes(app, { scraper, noStore });
 registerScrapeRoutes(app, {
     scraper,
     noStore,
