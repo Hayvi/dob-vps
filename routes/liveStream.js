@@ -204,8 +204,8 @@ function registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData })
         },
         where: {
           sport: { id: parseInt(key) },
-          game: { type: 1 },
-          market: { type: { '@in': types } }
+          game: { type: 1 }
+          // Removed market type filter - was excluding games without matching market types
         },
         subscribe: true
       }, (fullData, delta) => {
