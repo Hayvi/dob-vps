@@ -1,6 +1,6 @@
 function sortByOrderAsc(a, b) {
-  const ao = a?.order ?? Number.MAX_SAFE_INTEGER;
-  const bo = b?.order ?? Number.MAX_SAFE_INTEGER;
+  const ao = a?.order ?? a?.original_order ?? Number.MAX_SAFE_INTEGER;
+  const bo = b?.order ?? b?.original_order ?? Number.MAX_SAFE_INTEGER;
   if (ao !== bo) return ao - bo;
   return String(a?.id ?? '').localeCompare(String(b?.id ?? ''));
 }
