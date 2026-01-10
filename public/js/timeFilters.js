@@ -155,10 +155,26 @@ function renderFilteredGames(games, container) {
         container.querySelectorAll('.game-row.selected').forEach(r => r.classList.remove('selected'));
         row.classList.add('selected');
         
+        selectedGame = game;
+        
+        // Start live game stream for markets
+        if (typeof startLiveGameStream === 'function') {
+          startLiveGameStream(gameId);
+        }
+        
         // Show details
         if (typeof showGameDetails === 'function') {
-          selectedGame = game;
           showGameDetails(game);
+        }
+        
+        // Show panel
+        const panel = document.getElementById('gameDetails');
+        if (panel) {
+          if (typeof isMobileLayout === 'function' && isMobileLayout()) {
+            if (typeof openMobileDetails === 'function') openMobileDetails();
+          } else {
+            panel.classList.remove('hidden');
+          }
         }
       }
     });
