@@ -1,5 +1,23 @@
 # Missing Features from Swarm API
 
+## ✅ Completed
+
+### Competition Favorites ✓
+- Competitions sorted by favorite status, then favorite_order, then order
+- ⭐ star icon shown for favorite competitions
+- Premier League, La Liga, Champions League, World Cup appear first
+
+### Market Display Organization ✓
+- Tabs use `display_key` from API (Winner, Totals, Handicap, Halves, Corners, Cards)
+- `display_color` shown as left border on market sections
+- `display_sub_key` used for period/half detection
+
+### Optimal Markets Flag ✓
+- `optimal: true` markets show ⚡ badge
+
+### New Markets Badge ✓
+- `is_new: true` markets show "NEW" badge
+
 ## 🔴 Not Implemented
 
 ### 1. Live Streaming / TV Integration
@@ -7,40 +25,22 @@
 - 91 prematch games have streaming available
 - `sportcast_id` for alternative provider
 
-### 2. Market Display Organization
-- `display_key` - Main category (WINNER, TOTALS, HANDICAP, CORRECT SCORE, etc.)
-- `display_sub_key` - Sub-category (MATCH, PERIOD, SET, HALF, etc.)
-- `display_color` - 92 unique colors for visual grouping
-
-### 3. Optimal Markets Flag
-- `optimal: true` - 641/6811 markets marked as recommended
-- Should highlight in UI
-
-### 4. New Markets Badge
-- `is_new: true` - 193 markets marked as new
-- "Ending - Teams Score Last Digits" markets are new
-
-### 5. Competition Favorites
-- `favorite: true` and `favorite_order` on competitions
-- Premier League, La Liga, Champions League, World Cup
-- Show prominently / sort first
-
-### 6. Asian Handicap Base Values
+### 2. Asian Handicap Base Values
 - `base` field on events: -59.5 to +59.5
 - Quarter handicaps (-0.25, -0.75, etc.)
 
-### 7. Express/Combo Bet IDs
+### 3. Express/Combo Bet IDs
 - `express_id` and `prematch_express_id` on markets
 - Determines which markets can combine in parlays
 
-### 8. Cashout Functionality
+### 4. Cashout Functionality
 - `cashout: 1` on markets - badge shown, no actual feature
 
-### 9. Bet Builder Markets
+### 5. Bet Builder Markets
 - `available_for_betbuilder: true` - same-game parlay markets
 
-### 10. Additional Market Groups
-- Corners, Cards, Players, Minutes, Quarters, Sets, Frames, Fouls, Wickets, Overs
+### 6. Promoted Games
+- `promoted: true` on games - feature at top of list
 
 ## 🟡 Partially Implemented
 
@@ -51,14 +51,12 @@
 | `cashout` badge | ✅ Badge only |
 | `betbuilder` badge | ✅ Badge only |
 | `promoted` games | ⚠️ Not using |
-| `favorite_order` | ⚠️ Not sorting by it |
+| `favorite_order` | ✅ Now sorting by it |
 
 ## 🎯 Priority Order
 
-1. Live Streaming Widget
-2. Market Display Keys reorganization
-3. Optimal Markets highlight
-4. Competition Favorites sorting
-5. Market Colors
-6. New Markets Badge
-7. Promoted Games featuring
+1. ~~Competition Favorites sorting~~ ✅
+2. ~~Market Display Keys reorganization~~ ✅
+3. Live Streaming Widget
+4. Promoted Games featuring
+5. Asian Handicap display improvements

@@ -4,6 +4,26 @@ function renderDetailsMarketEventsHtml(market, ctx) {
   // Check game-level blocked state from context
   const gameBlocked = ctx.isGameBlocked === true;
   
+  // Format Asian handicap line (quarter lines shown as split)
+  const formatAsianLine = (val) => {
+    const num = parseFloat(val);
+    if (!Number.isFinite(num)) return val;
+    
+    // Quarter handicaps: -0.25 = "0, -0.5", -0.75 = "-0.5, -1", etc.
+    const frac = Math.abs(num % 0.5);
+    if (Math.abs(frac - 0.25) < 0.01) {
+      // Quarter line - show as split
+      const base = num > 0 ? Math.floor(num * 2) / 2 : Math.ceil(num * 2) / 2;
+      const other = num > 0 ? base + 0.5 : base - 0.5;
+      const sign = num > 0 ? '+' : '';
+      return `${sign}${base}, ${sign}${other}`;
+    }
+    
+    // Regular line
+    const sign = num > 0 ? '+' : '';
+    return `${sign}${num}`;
+  };
+  
   // Sort events - use home_value/away_value for correct score, otherwise original_order
   const sortEvents = (a, b) => {
     // For correct score markets, sort by home_value then away_value
@@ -69,7 +89,7 @@ function renderDetailsMarketEventsHtml(market, ctx) {
       };
 
       return `
-           <div class="table-market">
+           <div class="table-market asian-handicap">
              <div class="tm-row tm-header">
                <div class="tm-col">${ctx.team1}</div>
                <div class="tm-col">${ctx.team2}</div>
@@ -78,13 +98,13 @@ function renderDetailsMarketEventsHtml(market, ctx) {
         const home = evs.find(isHomeType);
         const away = evs.find(isAwayType);
 
-        // Determine display line. Prefer Home's base, otherwise infer from key.
-        // Parse float to remove trailing zeros if possible for display
-        let displayLine = home?.e?.base;
-        if (displayLine === undefined) {
-          // If home is missing, try to derive inverse of away, or just use -key as default for home col
-          displayLine = away?.e?.base ? (parseFloat(away.e.base) * -1) : -parseFloat(key);
-        }
+        // Get actual base values from events
+        const homeBase = home?.e?.base;
+        const awayBase = away?.e?.base;
+        
+        // Format lines using Asian handicap formatter
+        const homeLineDisplay = homeBase !== undefined ? formatAsianLine(homeBase) : formatAsianLine(-parseFloat(key));
+        const awayLineDisplay = awayBase !== undefined ? formatAsianLine(awayBase) : formatAsianLine(parseFloat(key));
 
         const homeMeta = home ? ctx.getMoveMeta(marketId, home.k, home.e?.price) : { cls: '', arrow: '' };
         const awayMeta = away ? ctx.getMoveMeta(marketId, away.k, away.e?.price) : { cls: '', arrow: '' };
@@ -94,11 +114,11 @@ function renderDetailsMarketEventsHtml(market, ctx) {
         return `
                   <div class="tm-row">
                     <div class="tm-cell ${homeBlocked ? 'blocked' : homeMeta.cls}">
-                      <span class="tm-label">${displayLine}</span>
+                      <span class="tm-label ah-line">${homeLineDisplay}</span>
                       <span class="tm-price">${renderPrice(home?.e, homeMeta)}</span>
                     </div>
                     <div class="tm-cell ${awayBlocked ? 'blocked' : awayMeta.cls}">
-                      <span class="tm-label">${Number(displayLine) > 0 ? -Number(displayLine) : '+' + Math.abs(Number(displayLine))}</span>
+                      <span class="tm-label ah-line">${awayLineDisplay}</span>
                       <span class="tm-price">${renderPrice(away?.e, awayMeta)}</span>
                     </div>
                   </div>
