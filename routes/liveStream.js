@@ -199,8 +199,8 @@ function registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData })
             'strong_team', 'round', 'region_alias', 'last_event', 'live_available',
             'promoted', 'is_neutral_venue', 'season_id', 'sport_alias'
           ],
-          market: ['id', 'name', 'type', 'order', 'col_count', 'display_key', 'is_blocked', 'market_type', 'display_sub_key', 'sequence', 'point_sequence'],
-          event: ['id', 'name', 'price', 'order', 'original_order', 'type', 'type_1', 'base', 'is_blocked']
+          market: ['id', 'name', 'type', 'order', 'col_count', 'mobile_col_count', 'display_key', 'is_blocked', 'market_type', 'display_sub_key', 'sequence', 'point_sequence', 'optimal', 'name_template', 'express_id', 'is_new', 'group_order'],
+          event: ['id', 'name', 'price', 'order', 'original_order', 'alt_order', 'type', 'type_1', 'base', 'is_blocked']
         },
         where: {
           sport: { id: parseInt(key) },
@@ -340,8 +340,8 @@ function registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData })
           source: 'betting',
           what: {
             game: ['id', 'market'],
-            market: ['id', 'name', 'type', 'order', 'col_count', 'display_key', 'event', 'is_blocked', 'cashout', 'available_for_betbuilder', 'group_id', 'group_name', 'display_color', 'market_type', 'display_sub_key', 'sequence', 'point_sequence'],
-            event: ['id', 'name', 'price', 'order', 'original_order', 'type', 'type_1', 'base', 'is_blocked', 'home_value', 'away_value', 'type_id']
+            market: ['id', 'name', 'type', 'order', 'col_count', 'mobile_col_count', 'display_key', 'event', 'is_blocked', 'cashout', 'available_for_betbuilder', 'group_id', 'group_name', 'group_order', 'display_color', 'market_type', 'display_sub_key', 'sequence', 'point_sequence', 'optimal', 'name_template', 'express_id', 'is_new'],
+            event: ['id', 'name', 'price', 'order', 'original_order', 'alt_order', 'type', 'type_1', 'base', 'is_blocked', 'home_value', 'away_value', 'type_id']
           },
           where: {
             game: { id: { '@in': gameIds } },
@@ -457,7 +457,7 @@ function registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData })
         source: 'betting',
         what: {
           market: ['id', 'name', 'type', 'order', 'col_count', 'display_key', 'is_blocked', 'cashout', 'available_for_betbuilder', 'group_id', 'group_name', 'display_color'],
-          event: ['id', 'name', 'price', 'order', 'original_order', 'type', 'type_1', 'base', 'is_blocked', 'home_value', 'away_value', 'type_id']
+          event: ['id', 'name', 'price', 'order', 'original_order', 'alt_order', 'type', 'type_1', 'base', 'is_blocked', 'home_value', 'away_value', 'type_id']
         },
         where: {
           game: { id: parseInt(key) }

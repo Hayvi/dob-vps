@@ -303,11 +303,11 @@ class ForzzaScraper {
                 game: [
                     'id', 'team1_name', 'team2_name', 'team1_id', 'team2_id', 
                     'start_ts', 'markets_count', 'info',
-                    // Additional live metadata fields
                     'stats', 'score1', 'score2', 'text_info', 'live_events',
                     'is_live', 'is_started', 'type', 'game_number', 'match_length',
                     'strong_team', 'round', 'region_alias', 'last_event', 'live_available', 'promoted', 'is_neutral_venue', 'season_id',
-                    'scout_provider', 'visible_in_prematch'
+                    'scout_provider', 'visible_in_prematch',
+                    'not_in_sportsbook', 'is_reversed', 'team1_reg', 'team2_reg', 'team1_reg_name', 'team2_reg_name', 'add_info_name', 'favorite_order'
                 ]
             },
             where: {
@@ -331,11 +331,11 @@ class ForzzaScraper {
                 game: [
                     'id', 'team1_name', 'team2_name', 'team1_id', 'team2_id', 
                     'start_ts', 'type', 'is_blocked', 'markets_count', 'info',
-                    // Additional live metadata fields
                     'stats', 'score1', 'score2', 'text_info', 'live_events',
                     'is_live', 'is_started', 'game_number', 'match_length',
                     'strong_team', 'round', 'region_alias', 'last_event', 'live_available', 'promoted', 'is_neutral_venue', 'season_id',
-                    'scout_provider', 'visible_in_prematch'
+                    'scout_provider', 'visible_in_prematch',
+                    'not_in_sportsbook', 'is_reversed', 'team1_reg', 'team2_reg', 'team1_reg_name', 'team2_reg_name', 'add_info_name', 'favorite_order'
                 ]
             },
             where: {
@@ -425,7 +425,8 @@ class ForzzaScraper {
                     'is_live', 'is_started', 'game_number', 'match_length',
                     'sport_alias', 'show_type', 'is_stat_available',
                     'strong_team', 'round', 'region_alias', 'last_event', 'live_available', 'promoted', 'is_neutral_venue', 'season_id',
-                    'scout_provider', 'visible_in_prematch'
+                    'scout_provider', 'visible_in_prematch',
+                    'not_in_sportsbook', 'is_reversed', 'team1_reg', 'team2_reg', 'team1_reg_name', 'team2_reg_name', 'add_info_name', 'favorite_order'
                 ]
             },
             where: {
@@ -505,8 +506,8 @@ class ForzzaScraper {
         const subscriptionRequest = {
             source: 'betting',
             what: {
-                market: ['id', 'name', 'type', 'order', 'col_count', 'display_key', 'is_blocked', 'cashout', 'available_for_betbuilder', 'group_id', 'group_name', 'display_color', 'market_type', 'display_sub_key', 'sequence', 'point_sequence'],
-                event: ['id', 'name', 'price', 'order', 'original_order', 'type', 'type_1', 'base', 'is_blocked', 'home_value', 'away_value', 'type_id']
+                market: ['id', 'name', 'type', 'order', 'col_count', 'mobile_col_count', 'display_key', 'is_blocked', 'cashout', 'available_for_betbuilder', 'group_id', 'group_name', 'group_order', 'display_color', 'market_type', 'display_sub_key', 'sequence', 'point_sequence', 'optimal', 'name_template', 'express_id', 'is_new'],
+                event: ['id', 'name', 'price', 'order', 'original_order', 'alt_order', 'type', 'type_1', 'base', 'is_blocked', 'home_value', 'away_value', 'type_id']
             },
             where: {
                 game: { id: parseInt(gameId) }
@@ -525,8 +526,8 @@ class ForzzaScraper {
         const response = await this.sendRequest('get', {
             source: 'betting',
             what: {
-                market: ['id', 'name', 'type', 'order', 'col_count', 'display_key', 'is_blocked', 'cashout', 'available_for_betbuilder', 'group_id', 'group_name', 'display_color', 'market_type', 'display_sub_key', 'sequence', 'point_sequence'],
-                event: ['id', 'name', 'price', 'order', 'original_order', 'type', 'type_1', 'base', 'is_blocked', 'home_value', 'away_value', 'type_id']
+                market: ['id', 'name', 'type', 'order', 'col_count', 'mobile_col_count', 'display_key', 'is_blocked', 'cashout', 'available_for_betbuilder', 'group_id', 'group_name', 'group_order', 'display_color', 'market_type', 'display_sub_key', 'sequence', 'point_sequence', 'optimal', 'name_template', 'express_id', 'is_new'],
+                event: ['id', 'name', 'price', 'order', 'original_order', 'alt_order', 'type', 'type_1', 'base', 'is_blocked', 'home_value', 'away_value', 'type_id']
             },
             where: {
                 game: { id: parseInt(gameId) }

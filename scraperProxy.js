@@ -94,7 +94,7 @@ class ScraperProxy {
   async subscribeToPrematchGames(sportId, onUpdate) {
     const request = {
       source: 'betting',
-      what: { sport: ['id','name','alias','order'], region: ['id','name','alias','order'], competition: ['id','order','name','favorite','teams_reversed'], game: ['id','team1_name','team2_name','team1_id','team2_id','start_ts','type','is_blocked','markets_count','info','stats','score1','score2','text_info','live_events','is_live','is_started','game_number','match_length','sport_alias','show_type','is_stat_available','strong_team','round','region_alias','last_event','live_available','promoted','is_neutral_venue','season_id','scout_provider','visible_in_prematch'] },
+      what: { sport: ['id','name','alias','order'], region: ['id','name','alias','order'], competition: ['id','order','name','favorite','teams_reversed'], game: ['id','team1_name','team2_name','team1_id','team2_id','start_ts','type','is_blocked','markets_count','info','stats','score1','score2','text_info','live_events','is_live','is_started','game_number','match_length','sport_alias','show_type','is_stat_available','strong_team','round','region_alias','last_event','live_available','promoted','is_neutral_venue','season_id','scout_provider','visible_in_prematch','not_in_sportsbook','is_reversed','team1_reg','team2_reg','team1_reg_name','team2_reg_name','add_info_name','favorite_order'] },
       where: { sport: { id: parseInt(sportId) }, game: { '@or': [{ visible_in_prematch: 1 }, { type: { '@in': [0,2] } }] } },
       subscribe: true
     };
@@ -112,7 +112,7 @@ class ScraperProxy {
   }
 
   async subscribeToGameMarkets(gameId, onUpdate) {
-    const request = { source: 'betting', what: { market: ['id','name','type','order','col_count','display_key','is_blocked','cashout','available_for_betbuilder','group_id','group_name','display_color','market_type','display_sub_key','sequence','point_sequence'], event: ['id','name','price','order','original_order','type','base','is_blocked','home_value','away_value','type_id'] }, where: { game: { id: parseInt(gameId) } }, subscribe: true };
+    const request = { source: 'betting', what: { market: ['id','name','type','order','col_count','mobile_col_count','display_key','is_blocked','cashout','available_for_betbuilder','group_id','group_name','group_order','display_color','market_type','display_sub_key','sequence','point_sequence','optimal','name_template','express_id','is_new'], event: ['id','name','price','order','original_order','type','type_1','base','is_blocked','home_value','away_value','type_id','alt_order'] }, where: { game: { id: parseInt(gameId) } }, subscribe: true };
     return this.subscribe(request, onUpdate);
   }
 
