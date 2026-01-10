@@ -3,29 +3,38 @@ function hydrateGameStatsInDetails(isLive, statsContainer, serverGameId, team1, 
   if (isLive && game?.stats && statsContainer) {
     const stats = game.stats;
     
-    // Define which stats to show and their display names
+    // Define which stats to show (ordered by importance)
     const statConfig = [
+      { key: 'possession', label: 'Possession %' },
       { key: 'dangerous_attack', label: 'Dangerous Attacks' },
+      { key: 'attack', label: 'Attacks' },
       { key: 'shot_on_target', label: 'Shots on Target' },
+      { key: 'shot_off_target', label: 'Shots off Target' },
       { key: 'shot_blocked', label: 'Shots Blocked' },
       { key: 'corner', label: 'Corners' },
-      { key: 'goal', label: 'Goals' },
       { key: 'foul', label: 'Fouls' },
+      { key: 'free_kick', label: 'Free Kicks' },
       { key: 'offside', label: 'Offsides' },
       { key: 'yellow_card', label: 'Yellow Cards' },
       { key: 'red_card', label: 'Red Cards' },
       { key: 'goalkeeper_save', label: 'Saves' },
-      { key: 'free_kick', label: 'Free Kicks' },
+      { key: 'goal_kick', label: 'Goal Kicks' },
       { key: 'throw_in', label: 'Throw-ins' },
+      { key: 'penalty', label: 'Penalties' },
       { key: 'substitution', label: 'Substitutions' },
-      { key: 'wicet', label: 'Wickets' }, // Cricket
-      { key: 'over', label: 'Overs' }, // Cricket
-      { key: 'possession', label: 'Possession %' },
-      { key: 'attack', label: 'Attacks' },
+      { key: 'video_ref', label: 'VAR Reviews' },
+      { key: 'ballSafe', label: 'Ball Safe' },
+      { key: 'passes', label: 'Passes' },
+      { key: 'wicket', label: 'Wickets' },
+      { key: 'wicet', label: 'Wickets' },
+      { key: 'over', label: 'Overs' },
     ];
     
     const statRows = statConfig
-      .filter(({ key }) => stats[key] && (stats[key].team1_value !== undefined || stats[key].team2_value !== undefined))
+      .filter(({ key }) => {
+        const s = stats[key];
+        return s && (s.team1_value !== undefined && s.team1_value !== null || s.team2_value !== undefined && s.team2_value !== null);
+      })
       .map(({ key, label }) => {
         const t1 = stats[key].team1_value ?? 0;
         const t2 = stats[key].team2_value ?? 0;
