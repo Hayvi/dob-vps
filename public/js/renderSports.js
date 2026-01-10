@@ -1,5 +1,11 @@
 // Rendering
 function renderSportsList() {
+  // Upcoming mode doesn't use sidebar sports - hide the list
+  if (currentMode === 'upcoming') {
+    sportsList.innerHTML = '<div class="upcoming-sidebar-message">Showing all sports<br><small>Games starting within 2 hours</small></div>';
+    return;
+  }
+
   if (!hierarchy || !hierarchy.sport) {
     sportsList.innerHTML = '<div class="loading">No sports data available</div>';
     return;

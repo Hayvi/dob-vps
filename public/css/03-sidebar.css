@@ -204,3 +204,18 @@
     font-size: 16px; /* Prevents iOS zoom */
   }
 }
+
+
+/* Upcoming sidebar message */
+.upcoming-sidebar-message {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.upcoming-sidebar-message small {
+  color: var(--text-muted);
+  font-size: 12px;
+}

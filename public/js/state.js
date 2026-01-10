@@ -76,7 +76,9 @@ function setMode(mode) {
   document.getElementById('gamesCount').textContent = '0 games';
 
   if (mode === 'upcoming') {
-    // Upcoming mode doesn't need sport selection
+    // Upcoming mode shows all sports - set header
+    document.getElementById('selectedSportName').textContent = 'Upcoming';
+    // Start the stream (it will hide welcome screen)
     if (typeof startUpcomingStream === 'function') {
       startUpcomingStream(2);
     }
