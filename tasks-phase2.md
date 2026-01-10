@@ -24,7 +24,7 @@
 - [x] 11. Add `sequence` + `point_sequence` - ordering
 
 ### Event Fields
-- [ ] 12. Add `type_1` - primary type (W1, W2)
+- [x] 12. Add `type_1` - primary type (W1, W2)
 - [x] 13. Add `original_order` - original ordering
 
 ### Competition Fields
