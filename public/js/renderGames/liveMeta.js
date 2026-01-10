@@ -1,3 +1,19 @@
+// Map event type_id to emoji
+function getEventIcon(typeId) {
+  const icons = {
+    '1': '⚽',   // Goal
+    '2': '🟨',   // Yellow card
+    '3': '🟥',   // Red card
+    '4': '🚩',   // Corner
+    '5': '⚽',   // Penalty goal
+    '6': '❌',   // Missed penalty
+    '7': '🔄',   // Substitution
+    '8': '⏱️',   // Period start/end
+    '25': '⚽',  // Shot/Attack
+  };
+  return icons[String(typeId)] || '•';
+}
+
 function getLiveMeta(game) {
   const info = game?.info;
   const stats = game?.stats;
@@ -373,5 +389,14 @@ function getLiveMeta(game) {
       : (phaseText || clockText);
   }
 
-  return { scoreText, timeText, periodScores };
+  // Last event info
+  const lastEvent = game?.last_event;
+  let lastEventHtml = '';
+  if (lastEvent && lastEvent.type_id) {
+    const icon = getEventIcon(lastEvent.type_id);
+    const side = lastEvent.side === '1' ? 'H' : lastEvent.side === '2' ? 'A' : '';
+    lastEventHtml = `<span class="last-event" title="Last event">${icon}${side}</span>`;
+  }
+
+  return { scoreText, timeText, periodScores, lastEventHtml };
 }

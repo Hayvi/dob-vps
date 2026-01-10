@@ -263,6 +263,29 @@ class ForzzaScraper {
         return data;
     }
 
+    /**
+     * Ping the WebSocket to check connection health
+     * @returns {Promise<boolean>} - true if connection is active
+     */
+    async ping() {
+        try {
+            const res = await this.sendRequest('ping', {}, 5000);
+            return res?.data?.is_active === true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * Get sports list quickly (faster than full hierarchy)
+     * @returns {Promise<Array>} - Array of sports
+     */
+    async getSports() {
+        await this.ensureConnection();
+        const res = await this.sendRequest('get_sports', {});
+        return res?.data?.details || [];
+    }
+
     async getGames(competitionId) {
         const response = await this.sendRequest('get', {
             source: 'betting',
@@ -272,7 +295,8 @@ class ForzzaScraper {
                     'start_ts', 'markets_count', 'info',
                     // Additional live metadata fields
                     'stats', 'score1', 'score2', 'text_info', 'live_events',
-                    'is_live', 'is_started', 'type', 'game_number', 'match_length'
+                    'is_live', 'is_started', 'type', 'game_number', 'match_length',
+                    'strong_team', 'round', 'region_alias', 'last_event', 'live_available', 'promoted', 'is_neutral_venue', 'season_id'
                 ]
             },
             where: {
@@ -298,7 +322,8 @@ class ForzzaScraper {
                     'start_ts', 'type', 'is_blocked', 'markets_count', 'info',
                     // Additional live metadata fields
                     'stats', 'score1', 'score2', 'text_info', 'live_events',
-                    'is_live', 'is_started', 'game_number', 'match_length'
+                    'is_live', 'is_started', 'game_number', 'match_length',
+                    'strong_team', 'round', 'region_alias', 'last_event', 'live_available', 'promoted', 'is_neutral_venue', 'season_id'
                 ]
             },
             where: {
@@ -386,7 +411,8 @@ class ForzzaScraper {
                     'start_ts', 'type', 'is_blocked', 'markets_count', 'info',
                     'stats', 'score1', 'score2', 'text_info', 'live_events',
                     'is_live', 'is_started', 'game_number', 'match_length',
-                    'sport_alias', 'show_type', 'is_stat_available'
+                    'sport_alias', 'show_type', 'is_stat_available',
+                    'strong_team', 'round', 'region_alias', 'last_event', 'live_available', 'promoted', 'is_neutral_venue', 'season_id'
                 ]
             },
             where: {
@@ -466,8 +492,8 @@ class ForzzaScraper {
         const subscriptionRequest = {
             source: 'betting',
             what: {
-                market: ['id', 'name', 'type', 'order', 'col_count', 'display_key', 'is_blocked'],
-                event: ['id', 'name', 'price', 'order', 'type', 'base', 'is_blocked']
+                market: ['id', 'name', 'type', 'order', 'col_count', 'display_key', 'is_blocked', 'cashout', 'available_for_betbuilder', 'group_id', 'group_name', 'display_color'],
+                event: ['id', 'name', 'price', 'order', 'type', 'base', 'is_blocked', 'home_value', 'away_value', 'type_id']
             },
             where: {
                 game: { id: parseInt(gameId) }
@@ -486,8 +512,8 @@ class ForzzaScraper {
         const response = await this.sendRequest('get', {
             source: 'betting',
             what: {
-                market: ['id', 'name', 'type', 'order', 'col_count', 'display_key', 'is_blocked'],
-                event: ['id', 'name', 'price', 'order', 'type', 'base', 'is_blocked']
+                market: ['id', 'name', 'type', 'order', 'col_count', 'display_key', 'is_blocked', 'cashout', 'available_for_betbuilder', 'group_id', 'group_name', 'display_color'],
+                event: ['id', 'name', 'price', 'order', 'type', 'base', 'is_blocked', 'home_value', 'away_value', 'type_id']
             },
             where: {
                 game: { id: parseInt(gameId) }

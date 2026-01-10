@@ -265,10 +265,13 @@ function showGameDetails(game) {
     if (expandedIds && expandedIds.some(x => String(x) === mid)) expanded = true;
     if (collapsedIds && collapsedIds.some(x => String(x) === mid)) expanded = false;
 
+    const cashoutBadge = market?.cashout === 1 ? '<span class="cashout-badge" title="Cashout available">💰</span>' : '';
+    const betbuilderBadge = market?.available_for_betbuilder === true ? '<span class="betbuilder-badge" title="Bet Builder">🧩</span>' : '';
+
     return `
       <div class="market-section ${expanded ? '' : 'collapsed'}" data-market-id="${market?.id}">
         <div class="market-header" data-market-id="${market?.id}">
-          <span>${market?.name || 'Market'}</span>
+          <span>${market?.name || 'Market'}${cashoutBadge}${betbuilderBadge}</span>
           <span class="market-arrow">▼</span>
         </div>
         <div class="market-events-container">

@@ -206,8 +206,8 @@ function registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData })
           source: 'betting',
           what: {
             game: ['id', 'market'],
-            market: ['id', 'name', 'type', 'order', 'col_count', 'display_key', 'event', 'is_blocked'],
-            event: ['id', 'name', 'price', 'order', 'type', 'base', 'is_blocked']
+            market: ['id', 'name', 'type', 'order', 'col_count', 'display_key', 'event', 'is_blocked', 'cashout', 'available_for_betbuilder', 'group_id', 'group_name', 'display_color'],
+            event: ['id', 'name', 'price', 'order', 'type', 'base', 'is_blocked', 'home_value', 'away_value', 'type_id']
           },
           where: {
             game: { id: { '@in': gameIds } },
@@ -311,8 +311,8 @@ function registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData })
       const raw = await scraper.sendRequest('get', {
         source: 'betting',
         what: {
-          market: ['id', 'name', 'type', 'order', 'col_count', 'display_key', 'is_blocked'],
-          event: ['id', 'name', 'price', 'order', 'type', 'base', 'is_blocked']
+          market: ['id', 'name', 'type', 'order', 'col_count', 'display_key', 'is_blocked', 'cashout', 'available_for_betbuilder', 'group_id', 'group_name', 'display_color'],
+          event: ['id', 'name', 'price', 'order', 'type', 'base', 'is_blocked', 'home_value', 'away_value', 'type_id']
         },
         where: {
           game: { id: parseInt(key) }

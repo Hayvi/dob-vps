@@ -18,6 +18,11 @@ function renderGamesInCompetition(games) {
     const shirt1 = info.shirt1_color || '';
     const shirt2 = info.shirt2_color || '';
     
+    // Favorite team indicator (strong_team: 1 = team1 favorite, 2 = team2 favorite)
+    const strongTeam = game.strong_team;
+    const fav1 = strongTeam === 1 ? '<span class="favorite-star" title="Favorite">⭐</span>' : '';
+    const fav2 = strongTeam === 2 ? '<span class="favorite-star" title="Favorite">⭐</span>' : '';
+    
     // Helper to render team color badge
     const renderTeamColor = (color) => {
       if (!color || color === '000000') return '';
@@ -36,6 +41,7 @@ function renderGamesInCompetition(games) {
       const scoreParts = [];
       if (meta.scoreText) scoreParts.push(`<span class="live-score">${meta.scoreText}</span>`);
       if (meta.timeText) scoreParts.push(`<span class="live-time">${meta.timeText}</span>`);
+      if (meta.lastEventHtml) scoreParts.push(meta.lastEventHtml);
       
       // Period scores (quarters, sets, halves)
       if (meta.periodScores && meta.periodScores.length > 0) {
@@ -58,6 +64,18 @@ function renderGamesInCompetition(games) {
       dateDisplay = startTime ? startTime.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }) : '-';
       timeDisplay = startTime ? startTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '-';
     }
+
+    // Round display (e.g., "R1", "R2")
+    const roundDisplay = game.round ? `<span class="game-round">R${game.round}</span>` : '';
+    
+    // Live betting available indicator for prematch games
+    const liveAvailBadge = (!isLive && game.live_available === 1) ? '<span class="live-avail" title="Live betting available">📺</span>' : '';
+    
+    // Promoted/featured game indicator
+    const promotedBadge = game.promoted === true ? '<span class="promoted-badge" title="Featured">🔥</span>' : '';
+    
+    // Neutral venue indicator
+    const neutralBadge = game.is_neutral_venue === true ? '<span class="neutral-badge" title="Neutral venue">🏟️</span>' : '';
 
     const serverGameId = getServerGameId(game);
     const mainMarket = game.market ? pickMainMarketFromMap(game.market) : null;
@@ -101,8 +119,8 @@ function renderGamesInCompetition(games) {
         <div class="game-row game-row-live${isSelected ? ' selected' : ''}${gameBlockedClass}" data-game-id="${gameId}" ${serverGameId ? `data-server-game-id="${serverGameId}"` : ''}>
           ${liveMetaHtml}
           <div class="game-teams">
-            <div class="team-name">${renderTeamColor(shirt1)}${team1}</div>
-            <div class="team-name">${renderTeamColor(shirt2)}${team2}</div>
+            <div class="team-name">${renderTeamColor(shirt1)}${fav1}${team1}${promotedBadge}${neutralBadge}</div>
+            <div class="team-name">${renderTeamColor(shirt2)}${fav2}${team2}</div>
           </div>
           <div class="game-odds" ${serverGameId ? `data-server-game-id="${serverGameId}"` : ''}>
             ${[0, 1, 2].map((idx) => {
@@ -122,12 +140,12 @@ function renderGamesInCompetition(games) {
     return `
       <div class="game-row${isSelected ? ' selected' : ''}${gameBlockedClass}" data-game-id="${gameId}" ${serverGameId ? `data-server-game-id="${serverGameId}"` : ''}>
         <div class="game-time">
-          <div class="game-date">${dateDisplay}</div>
+          <div class="game-date">${dateDisplay}${roundDisplay}${liveAvailBadge}</div>
           <div class="game-hour">${timeDisplay}${isGameBlocked ? ' 🔒' : ''}</div>
         </div>
         <div class="game-teams">
-          <div class="team-name">${renderTeamColor(shirt1)}${team1}</div>
-          <div class="team-name">${renderTeamColor(shirt2)}${team2}</div>
+          <div class="team-name">${renderTeamColor(shirt1)}${fav1}${team1}${promotedBadge}${neutralBadge}</div>
+          <div class="team-name">${renderTeamColor(shirt2)}${fav2}${team2}</div>
         </div>
         <div class="game-odds" ${serverGameId ? `data-server-game-id="${serverGameId}"` : ''}>
           ${[0, 1, 2].map((idx) => {
