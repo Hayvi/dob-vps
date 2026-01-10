@@ -1,12 +1,54 @@
 function groupGames(games) {
   const grouped = {};
+  const compMeta = {}; // Track competition metadata for sorting
+  
   games.forEach(game => {
     const region = game.region || 'Other';
     const competition = game.competition || 'Other';
-    if (!grouped[region]) grouped[region] = {};
-    if (!grouped[region][competition]) grouped[region][competition] = [];
+    if (!grouped[region]) {
+      grouped[region] = {};
+      compMeta[region] = {};
+    }
+    if (!grouped[region][competition]) {
+      grouped[region][competition] = [];
+      compMeta[region][competition] = {
+        favorite: game.competition_favorite,
+        favorite_order: game.competition_favorite_order,
+        order: game.competition_order
+      };
+    }
     grouped[region][competition].push(game);
   });
+  
+  // Sort competitions within each region: favorites first, then by order
+  for (const region in grouped) {
+    const sorted = {};
+    const entries = Object.entries(grouped[region]);
+    
+    entries.sort((a, b) => {
+      const metaA = compMeta[region][a[0]] || {};
+      const metaB = compMeta[region][b[0]] || {};
+      
+      // Favorites first
+      const favA = metaA.favorite ? 1 : 0;
+      const favB = metaB.favorite ? 1 : 0;
+      if (favB !== favA) return favB - favA;
+      
+      // Then by favorite_order (lower = higher priority)
+      const foA = metaA.favorite_order ?? 9999;
+      const foB = metaB.favorite_order ?? 9999;
+      if (foA !== foB) return foA - foB;
+      
+      // Then by order
+      const oA = metaA.order ?? 9999;
+      const oB = metaB.order ?? 9999;
+      return oA - oB;
+    });
+    
+    entries.forEach(([comp, g]) => { sorted[comp] = g; });
+    grouped[region] = sorted;
+  }
+  
   return grouped;
 }
 
@@ -56,10 +98,12 @@ function renderRegionsTree(grouped, options = {}) {
       const vkey = `${region}|||${comp}`;
       const vkeyAttr = escapeAttr(vkey);
       competitionGamesByKey.set(vkey, games);
+      const isFavorite = games[0]?.competition_favorite;
+      const starIcon = isFavorite ? '<span class="comp-star" title="Popular">⭐</span>' : '';
       return `
             <div class="competition-section">
-              <div class="competition-header" data-comp="${regionIdx}-${compIdx}" data-region-name="${regionNameAttr}" data-comp-name="${compNameAttr}">
-                <span>${comp}</span>
+              <div class="competition-header${isFavorite ? ' favorite' : ''}" data-comp="${regionIdx}-${compIdx}" data-region-name="${regionNameAttr}" data-comp-name="${compNameAttr}">
+                <span>${starIcon}${comp}</span>
                 <div class="region-right">
                   <span class="region-count">${games.length}</span>
                   <span class="chevron">▼</span>

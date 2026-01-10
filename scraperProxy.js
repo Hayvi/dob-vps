@@ -94,7 +94,7 @@ class ScraperProxy {
   async subscribeToPrematchGames(sportId, onUpdate) {
     const request = {
       source: 'betting',
-      what: { sport: ['id','name','alias','order'], region: ['id','name','alias','order'], competition: ['id','order','name','favorite','teams_reversed'], game: ['id','team1_name','team2_name','team1_id','team2_id','start_ts','type','is_blocked','markets_count','info','stats','score1','score2','text_info','live_events','is_live','is_started','game_number','match_length','sport_alias','show_type','is_stat_available','strong_team','round','region_alias','last_event','live_available','promoted','is_neutral_venue','season_id','scout_provider','visible_in_prematch','not_in_sportsbook','is_reversed','team1_reg','team2_reg','team1_reg_name','team2_reg_name','add_info_name','favorite_order'] },
+      what: { sport: ['id','name','alias','order'], region: ['id','name','alias','order'], competition: ['id','order','name','favorite','favorite_order','teams_reversed'], game: ['id','team1_name','team2_name','team1_id','team2_id','start_ts','type','is_blocked','markets_count','info','stats','score1','score2','text_info','live_events','is_live','is_started','game_number','match_length','sport_alias','show_type','is_stat_available','strong_team','round','region_alias','last_event','live_available','promoted','is_neutral_venue','season_id','scout_provider','visible_in_prematch','not_in_sportsbook','is_reversed','team1_reg','team2_reg','team1_reg_name','team2_reg_name','add_info_name','favorite_order'] },
       where: { sport: { id: parseInt(sportId) }, game: { '@or': [{ visible_in_prematch: 1 }, { type: { '@in': [0,2] } }] } },
       subscribe: true
     };

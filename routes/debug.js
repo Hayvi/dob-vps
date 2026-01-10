@@ -111,7 +111,7 @@ function registerDebugRoutes(app, { scraper, requireAdmin }) {
                 source: 'betting',
                 what: {
                     region: ['id', 'name'],
-                    competition: ['id', 'name', 'favorite', 'teams_reversed'],
+                    competition: ['id', 'name', 'order', 'favorite', 'favorite_order', 'teams_reversed'],
                     game: ['id', 'team1_name', 'team2_name', 'start_ts', 'type']
                 },
                 where: {

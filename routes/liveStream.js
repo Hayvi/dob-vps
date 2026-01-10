@@ -194,7 +194,7 @@ function registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData })
         what: {
           sport: ['id', 'name'],
           region: ['id', 'name'],
-          competition: ['id', 'name', 'favorite', 'teams_reversed'],
+          competition: ['id', 'name', 'order', 'favorite', 'favorite_order', 'teams_reversed'],
           game: [
             'id', 'team1_name', 'team2_name', 'team1_id', 'team2_id',
             'start_ts', 'type', 'is_blocked', 'markets_count', 'info',

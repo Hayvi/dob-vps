@@ -237,7 +237,7 @@ class ForzzaScraper {
             what: {
                 sport: ['id', 'name', 'alias', 'order'],
                 region: ['id', 'name', 'alias', 'order'],
-                competition: ['id', 'name', 'order', 'favorite', 'teams_reversed']
+                competition: ['id', 'name', 'order', 'favorite', 'favorite_order', 'teams_reversed']
             }
         });
 
@@ -254,7 +254,7 @@ class ForzzaScraper {
                 what: {
                     sport: ['id', 'name', 'alias', 'order'],
                     region: ['id', 'name', 'alias', 'order'],
-                    competition: ['id', 'name', 'order', 'favorite', 'teams_reversed']
+                    competition: ['id', 'name', 'order', 'favorite', 'favorite_order', 'teams_reversed']
                 }
             });
             const retryData = unwrapSwarmData(retryResponse);
@@ -419,7 +419,7 @@ class ForzzaScraper {
             what: {
                 sport: ['id', 'name', 'alias', 'order'],
                 region: ['id', 'name', 'alias', 'order'],
-                competition: ['id', 'order', 'name', 'favorite', 'teams_reversed'],
+                competition: ['id', 'order', 'name', 'favorite', 'favorite_order', 'teams_reversed'],
                 game: [
                     'id', 'team1_name', 'team2_name', 'team1_id', 'team2_id',
                     'start_ts', 'type', 'is_blocked', 'markets_count', 'info',
