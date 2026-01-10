@@ -329,7 +329,7 @@
 
 .event-btn.odd-up {
   box-shadow: 0 0 0 1px rgba(0, 210, 106, 0.35);
-  animation: oddsFlashUp 1.1s ease;
+  animation: oddsFlashUp 2s ease;
 }
 
 .event-btn.odd-up .event-price,
@@ -339,7 +339,7 @@
 
 .event-btn.odd-down {
   box-shadow: 0 0 0 1px rgba(255, 107, 107, 0.35);
-  animation: oddsFlashDown 1.1s ease;
+  animation: oddsFlashDown 2s ease;
 }
 
 .event-btn.odd-down .event-price,
@@ -431,7 +431,7 @@
 
 .tm-cell.odd-up {
   box-shadow: 0 0 0 1px rgba(0, 210, 106, 0.35);
-  animation: oddsFlashUp 1.1s ease;
+  animation: oddsFlashUp 2s ease;
 }
 
 .tm-cell.odd-up .tm-price,
@@ -441,7 +441,7 @@
 
 .tm-cell.odd-down {
   box-shadow: 0 0 0 1px rgba(255, 107, 107, 0.35);
-  animation: oddsFlashDown 1.1s ease;
+  animation: oddsFlashDown 2s ease;
 }
 
 .tm-cell.odd-down .tm-price,

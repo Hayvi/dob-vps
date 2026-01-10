@@ -102,7 +102,7 @@ function updateGameRowOdds(serverGameId, oddsArr, marketsCount) {
         flashStore[String(i)] = {
           cls: direction === 'up' ? 'odd-up' : 'odd-down',
           arrow: direction === 'up' ? '▲' : '▼',
-          until: Date.now() + 1100
+          until: Date.now() + 2000
         };
       }
 
@@ -113,7 +113,7 @@ function updateGameRowOdds(serverGameId, oddsArr, marketsCount) {
         oddsBtns[i].classList.remove('odd-up', 'odd-down');
         if (arrowEl) arrowEl.textContent = '';
         oddsBtns[i][timeoutKey] = null;
-      }, 1100);
+      }, 2000);
     }
   }
 

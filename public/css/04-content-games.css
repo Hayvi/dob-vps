@@ -643,7 +643,7 @@
 .odd-btn.odd-up {
   border-color: var(--accent-green);
   box-shadow: 0 0 0 1px rgba(0, 210, 106, 0.35);
-  animation: oddsFlashUp 1.1s ease;
+  animation: oddsFlashUp 2s ease;
 }
 
 .odd-btn.odd-up .odd-value,
@@ -654,7 +654,7 @@
 .odd-btn.odd-down {
   border-color: var(--accent-red);
   box-shadow: 0 0 0 1px rgba(255, 107, 107, 0.35);
-  animation: oddsFlashDown 1.1s ease;
+  animation: oddsFlashDown 2s ease;
 }
 
 .odd-btn.odd-down .odd-value,
