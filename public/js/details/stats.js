@@ -89,11 +89,10 @@ function hydrateGameStatsInDetails(isLive, statsContainer, serverGameId, team1, 
     let eventsHtml = '';
     const liveEvents = game?.live_events;
     if (Array.isArray(liveEvents) && liveEvents.length > 0) {
-      // Event type mapping
+      // Event type mapping - type 3 is Yellow Card in Swarm API
       const eventTypes = {
         '1': { icon: '⚽', name: 'Goal' },
-        '2': { icon: '🟨', name: 'Yellow Card' },
-        '3': { icon: '🟥', name: 'Red Card' },
+        '3': { icon: '🟨', name: 'Yellow Card' },
         '4': { icon: '🚩', name: 'Corner' },
         '5': { icon: '⚽', name: 'Penalty' },
         '6': { icon: '🔄', name: 'Substitution' },
@@ -105,11 +104,12 @@ function hydrateGameStatsInDetails(isLive, statsContainer, serverGameId, team1, 
         '12': { icon: '🧤', name: 'Save' },
         '13': { icon: '🚫', name: 'Offside' },
         '14': { icon: '⚠️', name: 'Foul' },
+        '15': { icon: '🟥', name: 'Red Card' },
         '20': { icon: '⚡', name: 'Dangerous Attack' },
         '328': { icon: '📺', name: 'VAR Review' },
       };
       
-      // Sort by time descending (most recent first)
+      // Sort by time descending (most recent first), filter valid events
       const sortedEvents = [...liveEvents]
         .filter(e => e.type_id && eventTypes[e.type_id])
         .sort((a, b) => (b.time || 0) - (a.time || 0))

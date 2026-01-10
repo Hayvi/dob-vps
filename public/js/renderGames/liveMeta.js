@@ -1,14 +1,14 @@
-// Map event type_id to emoji
+// Map event type_id to emoji - type 3 is Yellow Card in Swarm API
 function getEventIcon(typeId) {
   const icons = {
     '1': '⚽',   // Goal
-    '2': '🟨',   // Yellow card
-    '3': '🟥',   // Red card
+    '3': '🟨',   // Yellow card
     '4': '🚩',   // Corner
     '5': '⚽',   // Penalty goal
-    '6': '❌',   // Missed penalty
-    '7': '🔄',   // Substitution
+    '6': '🔄',   // Substitution
+    '7': '🏥',   // Injury
     '8': '⏱️',   // Period start/end
+    '15': '🟥',  // Red card
     '25': '⚽',  // Shot/Attack
   };
   return icons[String(typeId)] || '•';
