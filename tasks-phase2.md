@@ -25,7 +25,7 @@
 
 ### Event Fields
 - [ ] 12. Add `type_1` - primary type (W1, W2)
-- [ ] 13. Add `original_order` - original ordering
+- [x] 13. Add `original_order` - original ordering
 
 ### Competition Fields
 - [ ] 14. Add `favorite` - favorite competition flag
