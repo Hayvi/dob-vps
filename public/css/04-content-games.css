@@ -1033,3 +1033,32 @@
     text-align: center;
   }
 }
+
+
+/* Team country flags */
+.team-flag {
+  font-size: 12px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* Additional game info */
+.game-add-info {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  font-style: italic;
+  grid-column: 1 / -1;
+}
+
+/* Market NEW badge */
+.market-new-badge {
+  background: var(--accent-green);
+  color: #fff;
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-left: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+}

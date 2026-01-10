@@ -1,3 +1,10 @@
+// Convert country code to flag emoji
+function getCountryFlag(code) {
+  if (!code || code.length !== 2) return '';
+  const codePoints = code.toUpperCase().split('').map(c => 127397 + c.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+}
+
 function renderGamesInCompetition(games) {
   const selectedServerGameId = selectedGame ? getServerGameId(selectedGame) : null;
 
@@ -77,6 +84,13 @@ function renderGamesInCompetition(games) {
     // Neutral venue indicator
     const neutralBadge = game.is_neutral_venue === true ? '<span class="neutral-badge" title="Neutral venue">🏟️</span>' : '';
 
+    // Additional info (e.g., "Possible Format Change")
+    const addInfoHtml = game.add_info_name ? `<div class="game-add-info">${game.add_info_name}</div>` : '';
+    
+    // Team country flags
+    const team1Flag = game.team1_reg ? `<span class="team-flag" title="${game.team1_reg_name || game.team1_reg}">${getCountryFlag(game.team1_reg)}</span>` : '';
+    const team2Flag = game.team2_reg ? `<span class="team-flag" title="${game.team2_reg_name || game.team2_reg}">${getCountryFlag(game.team2_reg)}</span>` : '';
+
     const serverGameId = getServerGameId(game);
     const mainMarket = game.market ? pickMainMarketFromMap(game.market) : null;
     const odds = extract1X2Odds(mainMarket, team1, team2) || (Array.isArray(game.__mainOdds) ? game.__mainOdds : null);
@@ -119,8 +133,9 @@ function renderGamesInCompetition(games) {
         <div class="game-row game-row-live${isSelected ? ' selected' : ''}${gameBlockedClass}" data-game-id="${gameId}" ${serverGameId ? `data-server-game-id="${serverGameId}"` : ''}>
           ${liveMetaHtml}
           <div class="game-teams">
-            <div class="team-name">${renderTeamColor(shirt1)}${fav1}${team1}${promotedBadge}${neutralBadge}</div>
-            <div class="team-name">${renderTeamColor(shirt2)}${fav2}${team2}</div>
+            <div class="team-name">${renderTeamColor(shirt1)}${team1Flag}${fav1}${team1}${promotedBadge}${neutralBadge}</div>
+            <div class="team-name">${renderTeamColor(shirt2)}${team2Flag}${fav2}${team2}</div>
+            ${addInfoHtml}
           </div>
           <div class="game-odds" ${serverGameId ? `data-server-game-id="${serverGameId}"` : ''}>
             ${[0, 1, 2].map((idx) => {
@@ -144,8 +159,9 @@ function renderGamesInCompetition(games) {
           <div class="game-hour">${timeDisplay}${isGameBlocked ? ' 🔒' : ''}</div>
         </div>
         <div class="game-teams">
-          <div class="team-name">${renderTeamColor(shirt1)}${fav1}${team1}${promotedBadge}${neutralBadge}</div>
-          <div class="team-name">${renderTeamColor(shirt2)}${fav2}${team2}</div>
+          <div class="team-name">${renderTeamColor(shirt1)}${team1Flag}${fav1}${team1}${promotedBadge}${neutralBadge}</div>
+          <div class="team-name">${renderTeamColor(shirt2)}${team2Flag}${fav2}${team2}</div>
+          ${addInfoHtml}
         </div>
         <div class="game-odds" ${serverGameId ? `data-server-game-id="${serverGameId}"` : ''}>
           ${[0, 1, 2].map((idx) => {
