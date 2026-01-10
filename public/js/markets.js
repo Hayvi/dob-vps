@@ -132,13 +132,24 @@ function extract1X2Odds(mainMarket, team1, team2) {
   const ox = findOutcome('x');
   const o2 = findOutcome('2');
 
+  // Get label from type_1 or type field, fallback to default
+  const getLabel = (e, fallback) => {
+    const t1 = String(e?.type_1 || '').toUpperCase();
+    if (t1 === 'W1' || t1 === 'W2' || t1 === 'X') return t1;
+    const t = String(e?.type || '').toUpperCase();
+    if (t === 'W1' || t === 'W2') return t;
+    if (t === 'P1') return '1';
+    if (t === 'P2') return '2';
+    return fallback;
+  };
+
   const hasDraw = Boolean(ox) || events.some(isDraw);
 
   if (hasDraw) {
     return [
-      { label: '1', price: o1?.price, blocked: isEventBlocked(o1) },
-      { label: 'X', price: ox?.price, blocked: isEventBlocked(ox) },
-      { label: '2', price: o2?.price, blocked: isEventBlocked(o2) }
+      { label: getLabel(o1, '1'), price: o1?.price, blocked: isEventBlocked(o1) },
+      { label: getLabel(ox, 'X'), price: ox?.price, blocked: isEventBlocked(ox) },
+      { label: getLabel(o2, '2'), price: o2?.price, blocked: isEventBlocked(o2) }
     ];
   }
 
@@ -146,16 +157,16 @@ function extract1X2Odds(mainMarket, team1, team2) {
     const a = o1 || events[0];
     const b = o2 || events[1];
     return [
-      { label: '1', price: a?.price, blocked: isEventBlocked(a) },
-      { label: '2', price: b?.price, blocked: isEventBlocked(b) }
+      { label: getLabel(a, '1'), price: a?.price, blocked: isEventBlocked(a) },
+      { label: getLabel(b, '2'), price: b?.price, blocked: isEventBlocked(b) }
     ];
   }
 
   if (!o1 && !ox && !o2) return null;
 
   return [
-    { label: '1', price: o1?.price, blocked: isEventBlocked(o1) },
-    { label: '2', price: o2?.price, blocked: isEventBlocked(o2) }
+    { label: getLabel(o1, '1'), price: o1?.price, blocked: isEventBlocked(o1) },
+    { label: getLabel(o2, '2'), price: o2?.price, blocked: isEventBlocked(o2) }
   ];
 }
 
