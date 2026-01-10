@@ -44,6 +44,7 @@ function startUpcomingStream(hours = 2) {
     if (!payload) return;
 
     upcomingGames = payload.games || [];
+    console.log('Upcoming games received:', upcomingGames.length);
     renderUpcomingGames();
   });
 
