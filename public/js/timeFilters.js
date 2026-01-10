@@ -121,12 +121,15 @@ function renderFilteredGames(games, container) {
     const endIdx = startIdx + gamesPerPage;
     const pageGames = games.slice(startIdx, endIdx);
     
-    // Group page games by competition
-    const pageByComp = {};
+    // Group page games by region first, then competition
+    const pageByRegion = {};
     for (const g of pageGames) {
-      const key = g.competition || 'Other';
-      if (!pageByComp[key]) pageByComp[key] = [];
-      pageByComp[key].push(g);
+      const regionKey = g.region || 'Other';
+      const compKey = g.competition || 'Other';
+      
+      if (!pageByRegion[regionKey]) pageByRegion[regionKey] = {};
+      if (!pageByRegion[regionKey][compKey]) pageByRegion[regionKey][compKey] = [];
+      pageByRegion[regionKey][compKey].push(g);
     }
 
     let html = '';
@@ -157,39 +160,56 @@ function renderFilteredGames(games, container) {
       html += `</div></div>`;
     }
 
-    // Render games for this page
-    for (const [comp, compGames] of Object.entries(pageByComp)) {
-      const compId = `filtered-comp-${comp.replace(/[^a-zA-Z0-9]/g, '-')}`;
-      html += `<div class="competition-group">
-        <div class="competition-header clickable" onclick="toggleCompetition('${compId}')">
-          <span class="expand-icon">▶</span>
-          ${comp} 
-          <span class="game-count">(${compGames.length})</span>
-        </div>
-        <div class="competition-games collapsed" id="${compId}">`;
+    // Render games grouped by region and competition
+    for (const [region, competitions] of Object.entries(pageByRegion)) {
+      // Region header
+      const regionId = `filtered-region-${region.replace(/[^a-zA-Z0-9]/g, '-')}`;
+      const regionGameCount = Object.values(competitions).reduce((sum, games) => sum + games.length, 0);
       
-      for (const g of compGames) {
-        const time = g.start_ts ? new Date(g.start_ts * 1000) : null;
-        const dateStr = time ? time.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }) : '-';
-        const timeStr = time ? time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '-';
-        const fav1 = g.strong_team === 1 ? '<span class="favorite-star">⭐</span>' : '';
-        const fav2 = g.strong_team === 2 ? '<span class="favorite-star">⭐</span>' : '';
-        const roundBadge = g.round ? `<span class="game-round">R${g.round}</span>` : '';
+      html += `<div class="region-group">
+        <div class="region-header clickable" onclick="toggleFilteredRegion('${regionId}')">
+          <span class="expand-icon">▶</span>
+          🌍 ${region} 
+          <span class="game-count">(${regionGameCount})</span>
+        </div>
+        <div class="region-competitions collapsed" id="${regionId}">`;
 
-        html += `
-          <div class="game-row" data-game-id="${g.id}" data-server-game-id="${g.id}">
-            <div class="game-time">
-              <div class="game-date">${dateStr}${roundBadge}</div>
-              <div class="game-hour">${timeStr}</div>
-            </div>
-            <div class="game-teams">
-              <div class="team-name">${fav1}${g.team1_name || g.name || 'TBD'}</div>
-              <div class="team-name">${fav2}${g.team2_name || (g.team1_name ? 'TBD' : '-')}</div>
-            </div>
-            <div class="game-odds">
-              <div class="more-markets-pill">+${g.markets_count || 0}</div>
-            </div>
-          </div>`;
+      // Competitions within region
+      for (const [comp, compGames] of Object.entries(competitions)) {
+        const compId = `filtered-comp-${region.replace(/[^a-zA-Z0-9]/g, '-')}-${comp.replace(/[^a-zA-Z0-9]/g, '-')}`;
+        html += `<div class="competition-group">
+          <div class="competition-header clickable" onclick="toggleCompetition('${compId}')">
+            <span class="expand-icon">▶</span>
+            ${comp} 
+            <span class="game-count">(${compGames.length})</span>
+          </div>
+          <div class="competition-games collapsed" id="${compId}">`;
+        
+        for (const g of compGames) {
+          const time = g.start_ts ? new Date(g.start_ts * 1000) : null;
+          const dateStr = time ? time.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }) : '-';
+          const timeStr = time ? time.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '-';
+          const fav1 = g.strong_team === 1 ? '<span class="favorite-star">⭐</span>' : '';
+          const fav2 = g.strong_team === 2 ? '<span class="favorite-star">⭐</span>' : '';
+          const roundBadge = g.round ? `<span class="game-round">R${g.round}</span>` : '';
+
+          html += `
+            <div class="game-row" data-game-id="${g.id}" data-server-game-id="${g.id}">
+              <div class="game-time">
+                <div class="game-date">${dateStr}${roundBadge}</div>
+                <div class="game-hour">${timeStr}</div>
+              </div>
+              <div class="game-teams">
+                <div class="team-name">${fav1}${g.team1_name || g.name || 'TBD'}</div>
+                <div class="team-name">${fav2}${g.team2_name || (g.team1_name ? 'TBD' : '-')}</div>
+              </div>
+              <div class="game-odds">
+                <div class="more-markets-pill">+${g.markets_count || 0}</div>
+              </div>
+            </div>`;
+        }
+        
+        html += '</div></div>';
       }
       
       html += '</div></div>';
@@ -261,6 +281,24 @@ function renderFilteredGames(games, container) {
       if (icon) icon.textContent = '▼';
     } else {
       compEl.classList.add('collapsed');
+      if (icon) icon.textContent = '▶';
+    }
+  };
+
+  // Add toggle function for regions
+  window.toggleFilteredRegion = function(regionId) {
+    const regionEl = document.getElementById(regionId);
+    const headerEl = regionEl?.previousElementSibling;
+    if (!regionEl || !headerEl) return;
+    
+    const isCollapsed = regionEl.classList.contains('collapsed');
+    const icon = headerEl.querySelector('.expand-icon');
+    
+    if (isCollapsed) {
+      regionEl.classList.remove('collapsed');
+      if (icon) icon.textContent = '▼';
+    } else {
+      regionEl.classList.add('collapsed');
       if (icon) icon.textContent = '▶';
     }
   };
