@@ -30,6 +30,7 @@ const { registerResultsRoutes } = require('./routes/results');
 const { registerPrematchStreamRoutes } = require('./routes/prematchStream');
 const { registerBoostedRoutes } = require('./routes/boosted');
 const { registerTimeFilterRoutes } = require('./routes/timeFilter');
+const { registerUpcomingStreamRoute } = require('./routes/upcomingStream');
 
 const app = express();
 app.set('etag', false);
@@ -76,6 +77,7 @@ registerLiveTrackerRoutes(app);
 registerResultsRoutes(app, { scraper, noStore });
 registerBoostedRoutes(app, { scraper, noStore });
 registerTimeFilterRoutes(app, { scraper, noStore, parseGamesFromData });
+registerUpcomingStreamRoute(app, { scraper });
 registerScrapeRoutes(app, {
     scraper,
     noStore,

@@ -1,0 +1,123 @@
+// Upcoming stream - games starting soon (within N hours)
+let upcomingStreamSource = null;
+let upcomingStreamHours = 2;
+let upcomingStreamRetryTimeoutId = null;
+let upcomingGames = [];
+
+function isUpcomingStreamActive() {
+  return Boolean(upcomingStreamSource && upcomingStreamSource.readyState !== 2);
+}
+
+function stopUpcomingStream() {
+  if (upcomingStreamRetryTimeoutId) {
+    clearTimeout(upcomingStreamRetryTimeoutId);
+    upcomingStreamRetryTimeoutId = null;
+  }
+  if (upcomingStreamSource) {
+    upcomingStreamSource.close();
+  }
+  upcomingStreamSource = null;
+  upcomingGames = [];
+}
+
+function startUpcomingStream(hours = 2) {
+  if (currentMode !== 'upcoming') return;
+
+  // Reuse existing stream if same hours
+  if (upcomingStreamSource && upcomingStreamHours === hours && upcomingStreamSource.readyState !== 2) {
+    return;
+  }
+
+  stopUpcomingStream();
+  upcomingStreamHours = hours;
+
+  const es = new EventSource(`/api/upcoming-stream?hours=${hours}&_=${Date.now()}`);
+  upcomingStreamSource = es;
+
+  es.addEventListener('games', (evt) => {
+    if (currentMode !== 'upcoming') return;
+    const payload = safeJsonParse(evt?.data);
+    if (!payload) return;
+
+    upcomingGames = payload.games || [];
+    renderUpcomingGames();
+  });
+
+  es.addEventListener('odds', (evt) => {
+    if (currentMode !== 'upcoming') return;
+    const payload = safeJsonParse(evt?.data);
+    if (!payload) return;
+    
+    // Apply odds to games
+    for (const [gameId, odds] of Object.entries(payload)) {
+      const game = upcomingGames.find(g => String(g.id) === String(gameId));
+      if (game) game.__mainOdds = odds;
+    }
+    renderUpcomingGames();
+  });
+
+  es.addEventListener('error', () => {
+    if (currentMode !== 'upcoming') return;
+    upcomingStreamRetryTimeoutId = setTimeout(() => {
+      if (currentMode === 'upcoming') startUpcomingStream(hours);
+    }, 3000);
+  });
+}
+
+function renderUpcomingGames() {
+  const container = document.getElementById('gamesList');
+  if (!container || currentMode !== 'upcoming') return;
+
+  // Update count
+  const countEl = document.getElementById('gamesCount');
+  if (countEl) countEl.textContent = `${upcomingGames.length} upcoming`;
+
+  if (upcomingGames.length === 0) {
+    container.innerHTML = '<div class="no-games">No upcoming games in the next ' + upcomingStreamHours + ' hours</div>';
+    return;
+  }
+
+  // Group by sport
+  const bySport = {};
+  for (const game of upcomingGames) {
+    const sportName = game.sport_name || 'Other';
+    if (!bySport[sportName]) bySport[sportName] = [];
+    bySport[sportName].push(game);
+  }
+
+  let html = '';
+  for (const [sportName, games] of Object.entries(bySport)) {
+    html += `<div class="upcoming-sport-group">
+      <div class="upcoming-sport-header">${escapeHtml(sportName)} (${games.length})</div>`;
+    
+    for (const game of games) {
+      const startTime = new Date(game.start_ts * 1000);
+      const timeStr = startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const minutesUntil = Math.round((game.start_ts * 1000 - Date.now()) / 60000);
+      const timeLabel = minutesUntil <= 60 ? `${minutesUntil}m` : timeStr;
+      
+      const odds = game.__mainOdds || [];
+      const oddsHtml = odds.length > 0 
+        ? odds.map(o => `<span class="odd-btn${o.blocked ? ' blocked' : ''}">${o.blocked ? '🔒' : o.price?.toFixed(2) || '-'}</span>`).join('')
+        : '<span class="odd-btn">-</span><span class="odd-btn">-</span><span class="odd-btn">-</span>';
+
+      html += `<div class="game-row upcoming-game" data-game-id="${game.id}">
+        <div class="game-time upcoming-time ${minutesUntil <= 30 ? 'starting-soon' : ''}">${timeLabel}</div>
+        <div class="game-teams">
+          <span class="team">${escapeHtml(game.team1_name || 'Team 1')}</span>
+          <span class="vs">vs</span>
+          <span class="team">${escapeHtml(game.team2_name || 'Team 2')}</span>
+        </div>
+        <div class="game-odds">${oddsHtml}</div>
+      </div>`;
+    }
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}

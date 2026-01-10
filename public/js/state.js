@@ -38,6 +38,7 @@ const regionFlags = {
 const btnModePrematch = document.getElementById('modePrematch');
 const btnModeLive = document.getElementById('modeLive');
 const btnModeResults = document.getElementById('modeResults');
+const btnModeUpcoming = document.getElementById('modeUpcoming');
 
 function setMode(mode) {
   currentMode = mode;
@@ -49,12 +50,21 @@ function setMode(mode) {
   if (mode !== 'prematch' && typeof stopPrematchStream === 'function') {
     stopPrematchStream();
   }
+  if (mode !== 'upcoming' && typeof stopUpcomingStream === 'function') {
+    stopUpcomingStream();
+  }
 
   // Update UI
-  [btnModePrematch, btnModeLive, btnModeResults].forEach(btn => btn?.classList.remove('active'));
+  [btnModePrematch, btnModeLive, btnModeResults, btnModeUpcoming].forEach(btn => btn?.classList.remove('active'));
 
   const activeBtn = document.getElementById(`mode${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
   if (activeBtn) activeBtn.classList.add('active');
+
+  // Hide time filters for non-prematch modes
+  const timeFiltersEl = document.getElementById('timeFilters');
+  if (timeFiltersEl) {
+    timeFiltersEl.classList.toggle('hidden', mode !== 'prematch');
+  }
 
   // Trigger data refresh
   renderSportsList();
@@ -65,17 +75,20 @@ function setMode(mode) {
   if (gamesListEl) gamesListEl.innerHTML = '';
   document.getElementById('gamesCount').textContent = '0 games';
 
-  if (currentSport) {
+  if (mode === 'upcoming') {
+    // Upcoming mode doesn't need sport selection
+    if (typeof startUpcomingStream === 'function') {
+      startUpcomingStream(2);
+    }
+  } else if (currentSport) {
     // Reload based on new mode
     if (mode === 'live') {
       if (typeof startLiveStream === 'function') {
         startLiveStream(currentSport?.id || null);
       }
-      // Live games come via SSE stream, no need to call loadLiveGames
     } else if (mode === 'results') {
       loadResultGames(currentSport.id, currentSport.name);
     } else if (mode === 'prematch') {
-      // Check if time filter is active
       if (typeof activeTimeFilter !== 'undefined' && activeTimeFilter !== 0) {
         if (typeof loadFilteredPrematchGames === 'function') {
           loadFilteredPrematchGames();
@@ -94,3 +107,4 @@ function setMode(mode) {
 if (btnModePrematch) btnModePrematch.addEventListener('click', () => setMode('prematch'));
 if (btnModeLive) btnModeLive.addEventListener('click', () => setMode('live'));
 if (btnModeResults) btnModeResults.addEventListener('click', () => setMode('results'));
+if (btnModeUpcoming) btnModeUpcoming.addEventListener('click', () => setMode('upcoming'));

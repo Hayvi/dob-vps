@@ -475,6 +475,47 @@ class ForzzaScraper {
     }
 
     /**
+     * Subscribe to upcoming games (starting within N hours)
+     * @param {number} hours - Hours from now (default 2)
+     * @param {Function} onUpdate - Callback for real-time updates
+     * @returns {Promise<Object>} - Subscription object
+     */
+    async subscribeToUpcoming(hours = 2, onUpdate = null) {
+        await this.ensureConnection();
+
+        const seconds = hours * 3600;
+        const subscriptionRequest = {
+            source: 'betting',
+            what: {
+                sport: ['id', 'name', 'alias', 'order'],
+                region: ['id', 'name', 'alias', 'order'],
+                competition: ['id', 'order', 'name', 'favorite', 'favorite_order'],
+                game: [
+                    'id', 'team1_name', 'team2_name', 'team1_id', 'team2_id',
+                    'start_ts', 'type', 'is_blocked', 'markets_count', 'info',
+                    'sport_alias', 'region_alias', 'is_stat_available',
+                    'visible_in_prematch', 'favorite_order'
+                ]
+            },
+            where: {
+                sport: { type: { '@nin': [1, 4] } },
+                game: {
+                    type: { '@in': [0, 2] },
+                    start_ts: { '@now': { '@gte': 0, '@lte': seconds } }
+                }
+            },
+            subscribe: true
+        };
+
+        console.log(`Creating upcoming subscription (next ${hours}h)...`);
+        return await this.subscribe(subscriptionRequest, onUpdate, this._buildSubscriptionMeta({
+            endpoint: '/api/upcoming-stream',
+            tag: 'upcoming_games',
+            extra: { hours }
+        }));
+    }
+
+    /**
      * Subscribe to prematch games count using Forzza's format
      * @param {Function} onUpdate - Callback for real-time updates
      * @returns {Promise<Object>} - Subscription object

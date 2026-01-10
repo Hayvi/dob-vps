@@ -18,11 +18,11 @@ function log(type, data) {
   console.log(JSON.stringify(data, null, 2));
 }
 
-function send(command, params = {}) {
+function send(command, params = {}, silent = false) {
   const rid = uuidv4();
   const msg = { command, params, rid };
   
-  log('SEND', msg);
+  if (!silent) log('SEND', msg);
   
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
@@ -30,7 +30,7 @@ function send(command, params = {}) {
       reject(new Error(`Timeout: ${command}`));
     }, 30000);
     
-    pending.set(rid, { resolve, reject, timeout });
+    pending.set(rid, { resolve, reject, timeout, silent });
     ws.send(JSON.stringify(msg));
   });
 }
@@ -132,34 +132,162 @@ async function captureProtocol() {
         }
       }
       
-      if (sampleGameId) {
-        console.log('\n--- GAME MARKETS SUBSCRIPTION (Game:', sampleGameId, ') ---');
-        const marketsRes = await send('get', {
-          source: 'betting',
-          what: {
-            market: ['id', 'name', 'type', 'order', 'col_count', 'is_blocked'],
-            event: ['id', 'name', 'price', 'order', 'base', 'is_blocked']
-          },
-          where: {
-            game: { id: parseInt(sampleGameId) }
-          },
-          subscribe: true
-        });
-        
-        // Show a sample of the markets data structure
-        const marketsData = marketsRes.data?.data?.market;
-        if (marketsData) {
-          const marketIds = Object.keys(marketsData).slice(0, 2);
-          console.log('\n--- SAMPLE MARKET STRUCTURE ---');
-          for (const mid of marketIds) {
-            console.log(JSON.stringify({ [mid]: marketsData[mid] }, null, 2));
+      // 5. Explore ALL available commands
+      console.log('\n\n========== EXPLORING AVAILABLE API COMMANDS ==========\n');
+      
+      // Try various commands to see what's available
+      const commandsToTry = [
+        { cmd: 'get_sports', params: {} },
+        { cmd: 'get_boosted_selections', params: {} },
+        { cmd: 'get_max_bet', params: {} },
+        { cmd: 'get_partner_config', params: {} },
+        { cmd: 'get_currencies', params: {} },
+        { cmd: 'get_translations', params: { language: 'eng' } },
+        { cmd: 'get_promotions', params: {} },
+        { cmd: 'get_banners', params: {} },
+        { cmd: 'get_jackpots', params: {} },
+        { cmd: 'get_favorites', params: {} },
+        { cmd: 'get_popular_events', params: {} },
+        { cmd: 'get_top_events', params: {} },
+        { cmd: 'get_featured_events', params: {} },
+        { cmd: 'get_live_calendar', params: {} },
+        { cmd: 'get_sport_menu', params: {} },
+        { cmd: 'get_combo_bets', params: {} },
+        { cmd: 'get_super_bets', params: {} },
+        { cmd: 'get_express_bets', params: {} },
+        { cmd: 'get_multibet_offers', params: {} },
+        { cmd: 'get_bet_builder', params: {} },
+      ];
+      
+      for (const { cmd, params } of commandsToTry) {
+        try {
+          const res = await send(cmd, params, true);
+          if (res.code === 0 && res.data) {
+            console.log(`\n✅ ${cmd}:`);
+            const preview = JSON.stringify(res.data).slice(0, 500);
+            console.log(preview + (preview.length >= 500 ? '...' : ''));
+          }
+        } catch (e) {
+          // skip timeouts
+        }
+      }
+
+      // 6. Explore game fields we might be missing
+      console.log('\n\n========== EXPLORING GAME FIELDS ==========\n');
+      
+      const allGameFieldsRes = await send('get', {
+        source: 'betting',
+        what: { game: [] }, // empty array = all fields
+        where: {
+          sport: { id: 1 },
+          game: { type: 1 }
+        }
+      }, true);
+      
+      // Extract one game and show all its fields
+      const gData = allGameFieldsRes.data?.data || allGameFieldsRes.data;
+      if (gData?.sport) {
+        for (const sport of Object.values(gData.sport)) {
+          if (sport?.region) {
+            for (const region of Object.values(sport.region)) {
+              if (region?.competition) {
+                for (const comp of Object.values(region.competition)) {
+                  if (comp?.game) {
+                    const gameId = Object.keys(comp.game)[0];
+                    const game = comp.game[gameId];
+                    console.log('ALL GAME FIELDS for game', gameId + ':');
+                    console.log(JSON.stringify(Object.keys(game).sort(), null, 2));
+                    console.log('\nFull game object:');
+                    console.log(JSON.stringify(game, null, 2));
+                    break;
+                  }
+                }
+                break;
+              }
+            }
+            break;
+          }
+        }
+      }
+
+      // 7. Explore market fields
+      console.log('\n\n========== EXPLORING MARKET/EVENT FIELDS ==========\n');
+      
+      const liveGamesRes2 = await send('get', {
+        source: 'betting',
+        what: { game: ['id'] },
+        where: { sport: { id: 1 }, game: { type: 1 } }
+      }, true);
+      
+      let sampleGameId2 = null;
+      const lgData = liveGamesRes2.data?.data || liveGamesRes2.data;
+      if (lgData?.sport) {
+        outer: for (const sport of Object.values(lgData.sport)) {
+          if (sport?.region) {
+            for (const region of Object.values(sport.region)) {
+              if (region?.competition) {
+                for (const comp of Object.values(region.competition)) {
+                  if (comp?.game) {
+                    sampleGameId2 = Object.keys(comp.game)[0];
+                    break outer;
+                  }
+                }
+              }
+            }
           }
         }
       }
       
+      if (sampleGameId2) {
+        const allMarketsRes = await send('get', {
+          source: 'betting',
+          what: {
+            market: [], // all fields
+            event: []   // all fields
+          },
+          where: { game: { id: parseInt(sampleGameId2) } }
+        }, true);
+        
+        const mData = allMarketsRes.data?.data || allMarketsRes.data;
+        if (mData?.market) {
+          const marketId = Object.keys(mData.market)[0];
+          const market = mData.market[marketId];
+          console.log('ALL MARKET FIELDS:');
+          console.log(JSON.stringify(Object.keys(market).sort(), null, 2));
+          
+          if (market?.event) {
+            const eventId = Object.keys(market.event)[0];
+            const event = market.event[eventId];
+            console.log('\nALL EVENT FIELDS:');
+            console.log(JSON.stringify(Object.keys(event).sort(), null, 2));
+            console.log('\nSample event:');
+            console.log(JSON.stringify(event, null, 2));
+          }
+        }
+      }
+
+      // 8. Check for special data sources
+      console.log('\n\n========== EXPLORING DATA SOURCES ==========\n');
+      
+      const sources = ['betting', 'casino', 'poker', 'financials', 'esports', 'virtual_sports'];
+      for (const source of sources) {
+        try {
+          const res = await send('get', {
+            source,
+            what: { sport: ['id', 'name'] }
+          }, true);
+          if (res.code === 0 && res.data) {
+            const d = res.data?.data || res.data;
+            const count = d?.sport ? Object.keys(d.sport).length : 0;
+            if (count > 0) {
+              console.log(`✅ Source "${source}": ${count} sports`);
+            }
+          }
+        } catch (e) {}
+      }
+
       console.log('\n\n========================================');
-      console.log('Listening for subscription updates...');
-      console.log('Press Ctrl+C to exit');
+      console.log('Exploration complete!');
       console.log('========================================\n');
       
     } catch (err) {
@@ -173,10 +301,10 @@ async function captureProtocol() {
       
       // Handle request responses
       if (msg.rid && pending.has(msg.rid)) {
-        const { resolve, timeout } = pending.get(msg.rid);
+        const { resolve, timeout, silent } = pending.get(msg.rid);
         clearTimeout(timeout);
         pending.delete(msg.rid);
-        log('RECV (response)', msg);
+        if (!silent) log('RECV (response)', msg);
         resolve(msg);
         return;
       }

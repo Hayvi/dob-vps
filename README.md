@@ -68,6 +68,7 @@ node cluster.js
 - **Gzip Compression:** 85-95% payload reduction
 - **Auto-reconnect:** Resilient WebSocket with heartbeat
 - **Results & Settlements:** Finished games with market outcomes
+- **Upcoming Games:** Games starting within N hours using Swarm's `@now` operator
 
 See original README.md for full feature documentation.
 
@@ -144,6 +145,7 @@ See original README.md for full feature documentation.
 | `GET /api/live-stream?sportId=<id>` | SSE (1s) for live games and main market odds diffs |
 | `GET /api/live-game-stream?gameId=<id>` | SSE for selected game markets (subscription-first with polling fallback); drives list + details sync |
 | `GET /api/prematch-stream?sportId=<id>&sportName=<name>` | SSE for prematch games and main market odds diffs |
+| `GET /api/upcoming-stream?hours=<n>` | SSE for games starting within N hours (default 2h) using Swarm's `@now` operator |
 | `GET /api/live-sports` | Sports with live games + counts |
 | `GET /api/prematch-sports` | Sports with prematch games + counts (Forzza-exact filter) |
 | `GET /api/health` | Cache stats + response metrics + `counts_stream` fetch-rate metrics + `swarm_ws` subscription metrics + WS message counters |
