@@ -382,6 +382,32 @@ function getLiveMeta(game) {
       if (Number.isFinite(add) && add > 0 && baseMatch) {
         clockText = `${Number(baseMatch[1])}+${add}'`;
       }
+      
+      // Show stoppage time indicator
+      const currentMin = baseMatch ? Number(baseMatch[1]) : null;
+      const state = pickString(info.current_game_state);
+      const isFirstHalf = state === 'set1' || state === '1st_half' || state === 'first_half';
+      const isSecondHalf = state === 'set2' || state === '2nd_half' || state === 'second_half';
+      
+      const parseStoppage = (val) => {
+        if (!val) return null;
+        const s = String(val).trim();
+        if (s.includes(':')) return Number(s.split(':')[0]) || null;
+        return Number(s) || null;
+      };
+      
+      const stoppage1 = parseStoppage(info.stoppage_firsthalf);
+      const stoppage2 = parseStoppage(info.stoppage_secondhalf);
+      
+      if (isFirstHalf && currentMin >= 45 && stoppage1) {
+        clockText = `45+${currentMin - 45}' <span class="stoppage-ind">+${stoppage1}</span>`;
+      } else if (isSecondHalf && currentMin >= 90 && stoppage2) {
+        clockText = `90+${currentMin - 90}' <span class="stoppage-ind">+${stoppage2}</span>`;
+      } else if (isFirstHalf && currentMin >= 43 && stoppage1) {
+        clockText += ` <span class="stoppage-ind">+${stoppage1}</span>`;
+      } else if (isSecondHalf && currentMin >= 88 && stoppage2) {
+        clockText += ` <span class="stoppage-ind">+${stoppage2}</span>`;
+      }
     }
     
     timeText = phaseText && clockText

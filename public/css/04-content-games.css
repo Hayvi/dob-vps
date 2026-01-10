@@ -342,6 +342,16 @@
   border-radius: 4px;
 }
 
+.stoppage-ind {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-red);
+  background: rgba(255, 107, 107, 0.15);
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-left: 2px;
+}
+
 .period-scores {
   display: flex;
   gap: 4px;
