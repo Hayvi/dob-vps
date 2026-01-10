@@ -29,6 +29,10 @@ function registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData })
   const lastSportFp = new Map();
 
   const lastSportOddsFp = new Map();
+  
+  // Subscription-based sport data (replaces polling)
+  const sportSubscriptions = new Map();
+  const sportSubscriptionStartInFlight = new Map();
 
   const getSportName = createGetSportName(scraper);
 
@@ -168,7 +172,137 @@ function registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData })
     lastCountsFp = null;
   };
 
-  // Shared fetch logic for sport data
+  // Try to enable subscription-based live sport updates (replaces polling)
+  const tryEnableSportSubscription = async (sportId) => {
+    const key = String(sportId);
+    if (sportSubscriptions.has(key)) return true;
+    if (sportSubscriptionStartInFlight.get(key)) return false;
+    sportSubscriptionStartInFlight.set(key, true);
+
+    try {
+      const name = await getSportName(key);
+      const typePriority = getSportMainMarketTypePriority(name);
+      const types = Array.isArray(typePriority) && typePriority.length ? typePriority : ['P1P2', 'P1XP2'];
+
+      // Single subscription: games + embedded main market odds
+      const sub = await scraper.subscribe({
+        source: 'betting',
+        what: {
+          sport: ['id', 'name'],
+          region: ['id', 'name'],
+          competition: ['id', 'name'],
+          game: [
+            'id', 'team1_name', 'team2_name', 'team1_id', 'team2_id',
+            'start_ts', 'type', 'is_blocked', 'markets_count', 'info',
+            'stats', 'score1', 'score2', 'text_info', 'live_events',
+            'is_live', 'is_started', 'game_number', 'match_length',
+            'strong_team', 'round', 'region_alias', 'last_event', 'live_available',
+            'promoted', 'is_neutral_venue', 'season_id', 'sport_alias'
+          ],
+          market: ['id', 'name', 'type', 'order', 'col_count', 'display_key', 'is_blocked'],
+          event: ['id', 'name', 'price', 'order', 'type', 'base', 'is_blocked']
+        },
+        where: {
+          sport: { id: parseInt(key) },
+          game: { type: 1 },
+          market: { type: { '@in': types } }
+        },
+        subscribe: true
+      }, (fullData, delta) => {
+        // Called on each incremental update from Swarm
+        const set = sportClients.get(key);
+        if (!set || set.size === 0) return;
+
+        // Parse games from subscription data
+        let games = parseGamesFromData({ data: fullData }, name);
+        games = games.filter(g => Number(g?.type) === 1);
+        games.forEach((g, idx) => { g.__clientId = String(g.id ?? idx); });
+
+        const fp = getSportFp(games);
+        if (fp !== lastSportFp.get(key)) {
+          lastSportFp.set(key, fp);
+          writeToSet(set, 'games', {
+            sportId: key,
+            sportName: name,
+            count: games.length,
+            last_updated: new Date().toISOString(),
+            data: games
+          });
+        }
+
+        // Extract odds from embedded markets
+        const prevByGame = lastSportOddsFp.get(key) instanceof Map ? lastSportOddsFp.get(key) : new Map();
+        const nextByGame = new Map(prevByGame);
+        const updates = [];
+
+        for (const g of games) {
+          const gid = parseInt(g?.id);
+          if (!Number.isFinite(gid) || !g.market) continue;
+
+          const market = pickPreferredMarketFromEmbedded(g.market, typePriority);
+          if (!market) continue;
+
+          const fp = getOddsFp(market);
+          if (!fp || fp === prevByGame.get(String(gid))) continue;
+          nextByGame.set(String(gid), fp);
+
+          const oddsArr = buildOddsArrFromMarket(market);
+          if (!oddsArr) continue;
+
+          updates.push({
+            gameId: gid,
+            odds: oddsArr,
+            markets_count: g?.markets_count ?? null,
+            market: { id: market?.id, type: market?.type, display_key: market?.display_key }
+          });
+        }
+
+        lastSportOddsFp.set(key, nextByGame);
+        if (updates.length > 0) {
+          writeToSet(set, 'odds', { sportId: key, sportName: name, server_ts: Date.now(), updates });
+        }
+      });
+
+      if (!sub?.subid) {
+        if (sub?.unsubscribe) try { await sub.unsubscribe(); } catch {}
+        return false;
+      }
+
+      sportSubscriptions.set(key, sub);
+      
+      // Stop polling interval since subscription is active
+      const intervalId = sportIntervals.get(key);
+      if (intervalId) clearInterval(intervalId);
+      sportIntervals.delete(key);
+
+      // Send initial data
+      const initial = sub.getData ? sub.getData() : sub.data;
+      let games = parseGamesFromData({ data: initial }, name);
+      games = games.filter(g => Number(g?.type) === 1);
+      games.forEach((g, idx) => { g.__clientId = String(g.id ?? idx); });
+
+      const set = sportClients.get(key);
+      if (set && set.size > 0) {
+        writeToSet(set, 'games', {
+          sportId: key,
+          sportName: name,
+          count: games.length,
+          last_updated: new Date().toISOString(),
+          data: games
+        });
+      }
+
+      console.log(`✅ Sport ${key} using subscription (no polling)`);
+      return true;
+    } catch (e) {
+      console.log(`⚠️ Sport ${key} subscription failed, using polling:`, e.message);
+      return false;
+    } finally {
+      sportSubscriptionStartInFlight.delete(key);
+    }
+  };
+
+  // Shared fetch logic for sport data (fallback when subscription fails)
   const fetchSportData = async (key) => {
     const set = sportClients.get(key);
     if (!set || set.size === 0) return;
@@ -279,13 +413,16 @@ function registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData })
 
   const startSport = (sportId) => {
     const key = String(sportId);
-    if (sportIntervals.has(key)) return;
+    if (sportIntervals.has(key) || sportSubscriptions.has(key)) return;
 
-    // Fetch immediately on first client connection
-    fetchSportData(key);
-
-    // Then continue polling every 3 seconds
-    sportIntervals.set(key, setInterval(() => fetchSportData(key), 1000));
+    // Try subscription first (optimal - no polling)
+    tryEnableSportSubscription(key).then(success => {
+      if (!success && !sportIntervals.has(key) && !sportSubscriptions.has(key)) {
+        // Fallback to polling if subscription failed
+        fetchSportData(key);
+        sportIntervals.set(key, setInterval(() => fetchSportData(key), 1000));
+      }
+    });
   };
 
   const stopSportIfIdle = (sportId) => {
@@ -299,6 +436,14 @@ function registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData })
     sportInFlight.delete(key);
     lastSportFp.delete(key);
     lastSportOddsFp.delete(key);
+    
+    // Clean up subscription
+    const sub = sportSubscriptions.get(key);
+    if (sub && typeof sub.unsubscribe === 'function') {
+      try { Promise.resolve(sub.unsubscribe()).catch(() => {}); } catch {}
+    }
+    sportSubscriptions.delete(key);
+    sportSubscriptionStartInFlight.delete(key);
   };
 
   // Shared fetch logic for game data
