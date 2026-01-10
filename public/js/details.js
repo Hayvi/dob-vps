@@ -253,7 +253,8 @@ function showGameDetails(game) {
       isOverUnderLineMarket,
       isOver,
       isUnder,
-      isGameBlocked
+      isGameBlocked,
+      replaceTeamNames
     });
   };
 

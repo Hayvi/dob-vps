@@ -164,9 +164,10 @@ function renderDetailsMarketEventsHtml(market, ctx) {
   return `<div class="events-grid" style="--col-count: ${colCount}; --mobile-col-count: ${mobileColCount};">` + events.map(({ k, e }) => {
     const meta = ctx.getMoveMeta(marketId, k, e?.price);
     const blocked = isEventBlocked(e);
+    const eventName = ctx.replaceTeamNames ? ctx.replaceTeamNames(e?.name) : e?.name;
     return `
       <div class="event-btn ${blocked ? 'blocked' : meta.cls}">
-        <div class="event-name">${e?.name || '-'}</div>
+        <div class="event-name">${eventName || '-'}</div>
         <div class="event-price">${renderPrice(e, meta)}</div>
       </div>
     `;
