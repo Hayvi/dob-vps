@@ -1,4 +1,9 @@
 function renderGames(sportName, games, lastUpdated, pagination, options = {}) {
+  // Don't overwrite if time filter is active in prematch mode
+  if (currentMode === 'prematch' && typeof activeTimeFilter !== 'undefined' && activeTimeFilter !== 0) {
+    return;
+  }
+  
   welcomeScreen.classList.add('hidden');
   gamesContainer.classList.remove('hidden');
 

@@ -46,6 +46,14 @@
             <button id="modeLive" class="btn-mode" data-mode="live">Live</button>
             <button id="modeResults" class="btn-mode" data-mode="results">Results</button>
           </div>
+          <div id="timeFilters" class="time-filters hidden">
+            <button class="time-filter-btn active" data-hours="0">All</button>
+            <button class="time-filter-btn" data-hours="3">3h</button>
+            <button class="time-filter-btn" data-hours="6">6h</button>
+            <button class="time-filter-btn" data-hours="12">12h</button>
+            <button class="time-filter-btn" data-hours="24">24h</button>
+            <button class="time-filter-btn" data-hours="today">Today</button>
+          </div>
         </div>
         <div class="search-box">
           <input type="text" id="sportSearch" placeholder="Search sports...">
@@ -165,6 +173,7 @@
   <script src="js/api/games.js"></script>
   <script src="js/api/results.js"></script>
   <script src="js/api/boosted.js"></script>
+  <script src="js/timeFilters.js"></script>
   <script src="js/renderSports.js"></script>
   <script src="js/renderGames.js"></script>
   <script src="js/details/state.js"></script>

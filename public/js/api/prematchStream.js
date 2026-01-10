@@ -24,6 +24,8 @@ function stopPrematchStream() {
 
 function startPrematchStream(sportId) {
   if (currentMode !== 'prematch') return;
+  // Don't start stream if time filter is active
+  if (typeof activeTimeFilter !== 'undefined' && activeTimeFilter !== 0) return;
   
   const key = sportId ? String(sportId) : null;
   if (!key) return;
@@ -90,7 +92,10 @@ function startPrematchStream(sportId) {
 
     prematchStreamRetryTimeoutId = setTimeout(() => {
       prematchStreamRetryTimeoutId = null;
-      if (currentMode === 'prematch') startPrematchStream(sid);
+      // Don't retry if time filter is active
+      if (currentMode === 'prematch' && (typeof activeTimeFilter === 'undefined' || activeTimeFilter === 0)) {
+        startPrematchStream(sid);
+      }
     }, 5000);
   };
 }
@@ -99,6 +104,8 @@ function applyPrematchGamesPayload(payload) {
   if (!payload) return;
   if (!currentSport?.id) return;
   if (String(currentSport.id) !== String(payload?.sportId)) return;
+  // Don't overwrite if time filter is active
+  if (typeof activeTimeFilter !== 'undefined' && activeTimeFilter !== 0) return;
 
   const contentEl = document.querySelector('.content');
   const scrollTop = contentEl ? contentEl.scrollTop : null;

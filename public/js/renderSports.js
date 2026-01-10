@@ -64,13 +64,19 @@ function renderSportsList() {
       } else if (currentMode === 'prematch') {
         // Use subscription-based stream for prematch (instant!)
         currentSport = { id: item.dataset.id, name: item.dataset.name };
-        if (typeof startPrematchStream === 'function') {
-          startPrematchStream(item.dataset.id);
-        }
         // Show loading state
         welcomeScreen.classList.add('hidden');
         gamesContainer.classList.remove('hidden');
         document.getElementById('selectedSportName').textContent = item.dataset.name;
+        
+        // Check if time filter is active
+        if (typeof activeTimeFilter !== 'undefined' && activeTimeFilter !== 0) {
+          if (typeof loadFilteredPrematchGames === 'function') {
+            loadFilteredPrematchGames();
+          }
+        } else if (typeof startPrematchStream === 'function') {
+          startPrematchStream(item.dataset.id);
+        }
       } else if (currentMode === 'live') {
         // Use subscription-based stream for live
         currentSport = { id: item.dataset.id, name: item.dataset.name };

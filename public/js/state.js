@@ -71,12 +71,16 @@ function setMode(mode) {
       if (typeof startLiveStream === 'function') {
         startLiveStream(currentSport?.id || null);
       }
-      loadLiveGames(currentSport.id, currentSport.name);
+      // Live games come via SSE stream, no need to call loadLiveGames
     } else if (mode === 'results') {
       loadResultGames(currentSport.id, currentSport.name);
     } else if (mode === 'prematch') {
-      // Use subscription-based stream for prematch
-      if (typeof startPrematchStream === 'function') {
+      // Check if time filter is active
+      if (typeof activeTimeFilter !== 'undefined' && activeTimeFilter !== 0) {
+        if (typeof loadFilteredPrematchGames === 'function') {
+          loadFilteredPrematchGames();
+        }
+      } else if (typeof startPrematchStream === 'function') {
         startPrematchStream(currentSport?.id);
       }
     }

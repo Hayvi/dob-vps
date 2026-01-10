@@ -1,6 +1,11 @@
 function setupEventListeners() {
   // Tab switching
   const onModeChanged = () => {
+    // Update time filters visibility
+    if (typeof updateTimeFiltersVisibility === 'function') {
+      updateTimeFiltersVisibility();
+    }
+    
     (async () => {
       // Initial load of sports data - SSE will handle real-time updates via counts-stream
       await ensureAllSportsLoaded(true);
