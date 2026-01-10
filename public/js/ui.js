@@ -6,7 +6,10 @@ function sortByOrderAsc(a, b) {
 }
 
 function formatOddValue(price) {
-  return typeof price === 'number' && Number.isFinite(price) ? price.toFixed(2) : '-';
+  if (typeof price !== 'number' || !Number.isFinite(price)) return '-';
+  // Show 3 decimals if needed (like 1.005), otherwise 2
+  const fixed3 = price.toFixed(3);
+  return fixed3.endsWith('0') ? price.toFixed(2) : fixed3;
 }
 
 // UI Helpers
