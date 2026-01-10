@@ -35,13 +35,29 @@ function startUpcomingStream(hours = 2) {
   if (typeof welcomeScreen !== 'undefined') welcomeScreen.classList.add('hidden');
   if (typeof gamesContainer !== 'undefined') gamesContainer.classList.remove('hidden');
 
-  const es = new EventSource(`/api/upcoming-stream?hours=${hours}&_=${Date.now()}`);
+  console.log('Starting upcoming stream for', hours, 'hours');
+  const url = `/api/upcoming-stream?hours=${hours}&_=${Date.now()}`;
+  console.log('SSE URL:', url);
+  
+  const es = new EventSource(url);
   upcomingStreamSource = es;
 
+  es.onopen = () => {
+    console.log('Upcoming SSE connected');
+  };
+
+  es.onerror = (err) => {
+    console.error('Upcoming SSE error:', err);
+  };
+
   es.addEventListener('games', (evt) => {
+    console.log('Received games event:', evt.data?.substring(0, 200));
     if (currentMode !== 'upcoming') return;
     const payload = safeJsonParse(evt?.data);
-    if (!payload) return;
+    if (!payload) {
+      console.error('Failed to parse games payload');
+      return;
+    }
 
     upcomingGames = payload.games || [];
     console.log('Upcoming games received:', upcomingGames.length);
