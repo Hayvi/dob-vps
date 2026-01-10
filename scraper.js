@@ -235,7 +235,7 @@ class ForzzaScraper {
             what: {
                 sport: ['id', 'name', 'alias', 'order'],
                 region: ['id', 'name', 'alias', 'order'],
-                competition: ['id', 'name', 'order']
+                competition: ['id', 'name', 'order', 'favorite', 'teams_reversed']
             }
         });
 
@@ -252,7 +252,7 @@ class ForzzaScraper {
                 what: {
                     sport: ['id', 'name', 'alias', 'order'],
                     region: ['id', 'name', 'alias', 'order'],
-                    competition: ['id', 'name', 'order']
+                    competition: ['id', 'name', 'order', 'favorite', 'teams_reversed']
                 }
             });
             const retryData = unwrapSwarmData(retryResponse);

@@ -28,5 +28,5 @@
 - [x] 13. Add `original_order` - original ordering
 
 ### Competition Fields
-- [ ] 14. Add `favorite` - favorite competition flag
-- [ ] 15. Add `teams_reversed` - teams display order
+- [x] 14. Add `favorite` - favorite competition flag
+- [x] 15. Add `teams_reversed` - teams display order
