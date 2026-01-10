@@ -15,8 +15,8 @@
 ## Missing Fields (Lower Priority)
 
 ### Game Fields
-- [ ] 7. Add `scout_provider` - data provider ID
-- [ ] 8. Add `visible_in_prematch` - prematch visibility flag
+- [x] 7. Add `scout_provider` - data provider ID
+- [x] 8. Add `visible_in_prematch` - prematch visibility flag
 
 ### Market Fields
 - [ ] 9. Add `market_type` - type identifier
