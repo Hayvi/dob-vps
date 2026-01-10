@@ -70,7 +70,9 @@ class ForzzaScraper {
                 reject(new Error('WebSocket connection timeout'));
             }, 15000);
 
-            this.ws = new WebSocket(this.wsUrl);
+            this.ws = new WebSocket(this.wsUrl, {
+                perMessageDeflate: true
+            });
 
             this.ws.on('open', async () => {
                 try {
