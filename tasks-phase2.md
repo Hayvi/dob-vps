@@ -19,9 +19,9 @@
 - [x] 8. Add `visible_in_prematch` - prematch visibility flag
 
 ### Market Fields
-- [ ] 9. Add `market_type` - type identifier
-- [ ] 10. Add `display_sub_key` - sub-category (MATCH, 1ST HALF)
-- [ ] 11. Add `sequence` + `point_sequence` - ordering
+- [x] 9. Add `market_type` - type identifier
+- [x] 10. Add `display_sub_key` - sub-category (MATCH, 1ST HALF)
+- [x] 11. Add `sequence` + `point_sequence` - ordering
 
 ### Event Fields
 - [ ] 12. Add `type_1` - primary type (W1, W2)

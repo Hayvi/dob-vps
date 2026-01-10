@@ -132,7 +132,7 @@ function registerPrematchStreamRoutes(app, { scraper, noStore, parseGamesFromDat
                      source: 'betting',
                      what: {
                          game: ['id', 'market', 'markets_count'],
-                         market: ['id', 'name', 'type', 'order', 'col_count', 'display_key', 'event', 'is_blocked', 'cashout', 'available_for_betbuilder', 'group_id', 'group_name', 'display_color'],
+                         market: ['id', 'name', 'type', 'order', 'col_count', 'display_key', 'event', 'is_blocked', 'cashout', 'available_for_betbuilder', 'group_id', 'group_name', 'display_color', 'market_type', 'display_sub_key', 'sequence', 'point_sequence'],
                          event: ['id', 'name', 'price', 'order', 'original_order', 'type', 'base', 'is_blocked', 'home_value', 'away_value', 'type_id']
                      },
                      where: {
