@@ -30,6 +30,10 @@ function registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData })
 
   const lastSportOddsFp = new Map();
   
+  // Cache for instant initial response
+  const sportDataCache = new Map(); // key -> { data, timestamp }
+  const CACHE_TTL = 10000; // 10 seconds
+  
   // Subscription-based sport data (replaces polling)
   const sportSubscriptions = new Map();
   const sportSubscriptionStartInFlight = new Map();
@@ -211,23 +215,28 @@ function registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData })
       }, (fullData, delta) => {
         // Called on each incremental update from Swarm
         const set = sportClients.get(key);
-        if (!set || set.size === 0) return;
 
         // Parse games from subscription data
         let games = parseGamesFromData({ data: fullData }, name);
         games = games.filter(g => Number(g?.type) === 1);
         games.forEach((g, idx) => { g.__clientId = String(g.id ?? idx); });
 
+        // Cache for instant response to new clients
+        const payload = {
+          sportId: key,
+          sportName: name,
+          count: games.length,
+          last_updated: new Date().toISOString(),
+          data: games
+        };
+        sportDataCache.set(key, { data: payload, timestamp: Date.now() });
+
         const fp = getSportFp(games);
         if (fp !== lastSportFp.get(key)) {
           lastSportFp.set(key, fp);
-          writeToSet(set, 'games', {
-            sportId: key,
-            sportName: name,
-            count: games.length,
-            last_updated: new Date().toISOString(),
-            data: games
-          });
+          if (set && set.size > 0) {
+            writeToSet(set, 'games', payload);
+          }
         }
 
         // Extract odds from embedded markets
@@ -594,6 +603,13 @@ function registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData })
       if (sportId) {
         if (!sportClients.has(sportId)) sportClients.set(sportId, new Set());
         sportClients.get(sportId).add(res);
+        
+        // Send cached data immediately if available (instant response)
+        const cached = sportDataCache.get(sportId);
+        if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
+          safeWrite(res, 'games', cached.data);
+        }
+        
         startSport(sportId);
       }
 
