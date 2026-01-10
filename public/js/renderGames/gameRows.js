@@ -12,23 +12,42 @@ function renderGamesInCompetition(games) {
 
   return (Array.isArray(games) ? games : []).map(game => {
     const startTime = game.start_ts ? new Date(game.start_ts * 1000) : null;
-    const team1 = game.team1_name || game.name || 'Team 1';
-    const team2 = game.team2_name || (game.team1_name ? 'Team 2' : '-');
+    
+    // Check if teams should be reversed
+    const reversed = game.teams_reversed === true || game.is_reversed === true;
+    const team1 = reversed 
+      ? (game.team2_name || 'Team 2')
+      : (game.team1_name || game.name || 'Team 1');
+    const team2 = reversed
+      ? (game.team1_name || game.name || 'Team 1')
+      : (game.team2_name || (game.team1_name ? 'Team 2' : '-'));
+    
     const gameId = game.__clientId;
     const isLive = Boolean(game.type === 1);
     
     // Game-level blocked state
     const isGameBlocked = game.is_blocked === true || game.is_blocked === 1;
 
-    // Team shirt colors from info object
+    // Team shirt colors from info object (also reversed if needed)
     const info = game.info || {};
-    const shirt1 = info.shirt1_color || '';
-    const shirt2 = info.shirt2_color || '';
+    const shirt1 = reversed ? (info.shirt2_color || '') : (info.shirt1_color || '');
+    const shirt2 = reversed ? (info.shirt1_color || '') : (info.shirt2_color || '');
     
     // Favorite team indicator (strong_team: 1 = team1 favorite, 2 = team2 favorite)
+    // Also reversed if teams_reversed
     const strongTeam = game.strong_team;
-    const fav1 = strongTeam === 1 ? '<span class="favorite-star" title="Favorite">⭐</span>' : '';
-    const fav2 = strongTeam === 2 ? '<span class="favorite-star" title="Favorite">⭐</span>' : '';
+    const fav1Raw = strongTeam === 1;
+    const fav2Raw = strongTeam === 2;
+    const fav1 = (reversed ? fav2Raw : fav1Raw) ? '<span class="favorite-star" title="Favorite">⭐</span>' : '';
+    const fav2 = (reversed ? fav1Raw : fav2Raw) ? '<span class="favorite-star" title="Favorite">⭐</span>' : '';
+    
+    // Team flags (also reversed)
+    const team1Flag = (reversed ? game.team2_reg : game.team1_reg) 
+      ? `<span class="team-flag" title="${(reversed ? game.team2_reg_name : game.team1_reg_name) || (reversed ? game.team2_reg : game.team1_reg)}">${getCountryFlag(reversed ? game.team2_reg : game.team1_reg)}</span>` 
+      : '';
+    const team2Flag = (reversed ? game.team1_reg : game.team2_reg)
+      ? `<span class="team-flag" title="${(reversed ? game.team1_reg_name : game.team2_reg_name) || (reversed ? game.team1_reg : game.team2_reg)}">${getCountryFlag(reversed ? game.team1_reg : game.team2_reg)}</span>`
+      : '';
     
     // Helper to render team color badge
     const renderTeamColor = (color) => {
@@ -86,10 +105,6 @@ function renderGamesInCompetition(games) {
 
     // Additional info (e.g., "Possible Format Change")
     const addInfoHtml = game.add_info_name ? `<div class="game-add-info">${game.add_info_name}</div>` : '';
-    
-    // Team country flags
-    const team1Flag = game.team1_reg ? `<span class="team-flag" title="${game.team1_reg_name || game.team1_reg}">${getCountryFlag(game.team1_reg)}</span>` : '';
-    const team2Flag = game.team2_reg ? `<span class="team-flag" title="${game.team2_reg_name || game.team2_reg}">${getCountryFlag(game.team2_reg)}</span>` : '';
 
     const serverGameId = getServerGameId(game);
     const mainMarket = game.market ? pickMainMarketFromMap(game.market) : null;
