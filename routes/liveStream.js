@@ -193,7 +193,7 @@ function registerLiveStreamRoutes(app, { scraper, noStore, parseGamesFromData })
         source: 'betting',
         what: {
           sport: ['id', 'name'],
-          region: ['id', 'name'],
+          region: ['id', 'name', 'order'],
           competition: ['id', 'name', 'order', 'favorite', 'favorite_order', 'teams_reversed'],
           game: [
             'id', 'team1_name', 'team2_name', 'team1_id', 'team2_id',

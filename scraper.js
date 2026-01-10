@@ -328,8 +328,8 @@ class ForzzaScraper {
             source: 'betting',
             what: {
                 sport: ['id', 'name'],
-                region: ['id', 'name', 'competition'],
-                competition: ['id', 'name', 'game'],
+                region: ['id', 'name', 'order', 'competition'],
+                competition: ['id', 'name', 'order', 'favorite', 'favorite_order', 'game'],
                 game: [
                     'id', 'team1_name', 'team2_name', 'team1_id', 'team2_id', 
                     'start_ts', 'type', 'is_blocked', 'markets_count', 'info',
