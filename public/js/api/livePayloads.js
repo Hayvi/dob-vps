@@ -181,7 +181,7 @@ function applyLiveGamesPayload(payload) {
         const parts = [meta?.scoreText, meta?.timeText].filter(Boolean);
         const timeText = `LIVE${parts.length ? ` ${parts.join(' ')}` : ''}`;
         const timeEl = document.querySelector('#detailsContent .match-time-detail');
-        if (timeEl) timeEl.textContent = timeText;
+        if (timeEl) timeEl.innerHTML = timeText;
       }
     }
   }
