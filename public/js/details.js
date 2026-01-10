@@ -22,6 +22,12 @@ function showGameDetails(game) {
   }
   const startTime = game.start_ts ? new Date(game.start_ts * 1000) : null;
   const team1 = game.team1_name || game.name || 'Team 1';
+  
+  // Replace "Team 1"/"Team 2" with actual team names in market names (like Forzza)
+  const replaceTeamNames = (name) => {
+    if (!name) return name;
+    return name.replace(/Team 1/gi, team1).replace(/Team 2/gi, team2);
+  };
   const team2 = game.team2_name || (game.team1_name ? 'Team 2' : '-');
 
   // Team shirt colors
@@ -274,7 +280,7 @@ function showGameDetails(game) {
     return `
       <div class="market-section ${expanded ? '' : 'collapsed'}" data-market-id="${market?.id}" style="${colorStyle}">
         <div class="market-header" data-market-id="${market?.id}">
-          <span>${market?.name || 'Market'}${newBadge}${optimalBadge}${cashoutBadge}${betbuilderBadge}</span>
+          <span>${replaceTeamNames(market?.name) || 'Market'}${newBadge}${optimalBadge}${cashoutBadge}${betbuilderBadge}</span>
           <span class="market-arrow">▼</span>
         </div>
         <div class="market-events-container">
