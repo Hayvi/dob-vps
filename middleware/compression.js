@@ -37,7 +37,14 @@ function createCompressionMiddleware(options = {}) {
     // Filter function to determine if response should be compressed
     // Returns true if compression should be applied
     filter: (req, res) => {
-      if (String(req?.path || '').startsWith('/api/live-tracker')) {
+      const path = String(req?.path || '');
+      
+      // Don't compress SSE streams - compression breaks EventSource parsing
+      if (path.endsWith('-stream')) {
+        return false;
+      }
+      
+      if (path.startsWith('/api/live-tracker')) {
         return false;
       }
 
