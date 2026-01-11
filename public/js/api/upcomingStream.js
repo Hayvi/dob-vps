@@ -98,6 +98,10 @@ function renderUpcomingGames() {
   console.log('[Upcoming] renderUpcomingGames called, container:', !!container, 'mode:', currentMode, 'games:', upcomingGames.length);
   if (!container || currentMode !== 'upcoming') return;
 
+  // Ensure container is visible
+  if (typeof welcomeScreen !== 'undefined') welcomeScreen.classList.add('hidden');
+  if (typeof gamesContainer !== 'undefined') gamesContainer.classList.remove('hidden');
+
   // Update count
   const countEl = document.getElementById('gamesCount');
   if (countEl) countEl.textContent = `${upcomingGames.length} upcoming`;
