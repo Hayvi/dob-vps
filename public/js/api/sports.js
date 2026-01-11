@@ -117,6 +117,7 @@ function updateModeButtons() {
   const prematchEl = document.getElementById('modePrematch');
   const liveEl = document.getElementById('modeLive');
   const resultsEl = document.getElementById('modeResults');
+  const upcomingEl = document.getElementById('modeUpcoming');
 
   if (prematchEl) {
     prematchEl.textContent = Number.isFinite(totalGamesPrematch) ? `Prematch (${totalGamesPrematch})` : 'Prematch';
@@ -126,5 +127,8 @@ function updateModeButtons() {
   }
   if (resultsEl) {
     resultsEl.textContent = Number.isFinite(totalGamesResults) ? `Results (${totalGamesResults})` : 'Results';
+  }
+  if (upcomingEl) {
+    upcomingEl.textContent = Number.isFinite(totalGamesUpcoming) ? `Upcoming (${totalGamesUpcoming})` : 'Upcoming';
   }
 }

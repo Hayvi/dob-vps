@@ -1,23 +1,10 @@
 // Rendering
 function renderSportsList() {
-  // Upcoming mode doesn't use sidebar sports - hide the list
-  if (currentMode === 'upcoming') {
-    sportsList.innerHTML = '<div class="upcoming-sidebar-message">Showing all sports<br><small>Games starting within 2 hours</small></div>';
-    return;
-  }
+
 
   if (!hierarchy || !hierarchy.sport) {
     sportsList.innerHTML = '<div class="loading">No sports data available</div>';
     return;
-  }
-
-  let allowed = null;
-  if (currentMode === 'live') {
-    allowed = (sportsWithLiveGames instanceof Set ? sportsWithLiveGames : null);
-  } else if (currentMode === 'results') {
-    allowed = (sportsWithResults instanceof Set ? sportsWithResults : null);
-  } else {
-    allowed = (sportsWithPrematchGames instanceof Set ? sportsWithPrematchGames : null);
   }
 
   const sports = Object.entries(hierarchy.sport).map(([id, sport]) => ({
@@ -27,22 +14,40 @@ function renderSportsList() {
     order: sport.order || 999
   }))
     .filter(sport => {
-      if (currentSport && String(currentSport.id) === String(sport.id)) return true;
-      if (!allowed) return true;
-      return allowed.has(String(sport.name).toLowerCase());
+      if (currentSport && String(currentSport.id) === String(sport.id)) return true; // Always show current selected sport
+
+      if (currentMode === 'upcoming') {
+        return sportsCountsUpcoming instanceof Map ? (sportsCountsUpcoming.get(String(sport.name).toLowerCase()) || 0) > 0 : true;
+      }
+
+      // Existing logic for other modes
+      if (currentMode === 'live') {
+        return sportsWithLiveGames instanceof Set ? sportsWithLiveGames.has(String(sport.name).toLowerCase()) : true;
+      } else if (currentMode === 'results') {
+        return sportsWithResults instanceof Set ? sportsWithResults.has(String(sport.name).toLowerCase()) : true;
+      } else { // Prematch
+        return sportsWithPrematchGames instanceof Set ? sportsWithPrematchGames.has(String(sport.name).toLowerCase()) : true;
+      }
     })
     .sort((a, b) => a.order - b.order);
 
-  document.getElementById('totalSports').textContent = sports.length;
-
   let counts;
+  let totalGamesForMode = 0;
   if (currentMode === 'live') {
     counts = sportsCountsLive;
+    totalGamesForMode = totalGamesLive;
   } else if (currentMode === 'results') {
     counts = sportsCountsResults;
+    totalGamesForMode = totalGamesResults;
+  } else if (currentMode === 'upcoming') {
+    counts = sportsCountsUpcoming;
+    totalGamesForMode = totalGamesUpcoming;
   } else {
     counts = sportsCountsPrematch;
+    totalGamesForMode = totalGamesPrematch;
   }
+
+  document.getElementById('totalSports').textContent = totalGamesForMode;
 
   sportsList.innerHTML = sports.map(sport => {
     const isActive = Boolean(currentSport && String(currentSport.id) === String(sport.id));

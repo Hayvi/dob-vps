@@ -55,23 +55,35 @@ function startUpcomingStream(hours = 2) {
     console.log('[Upcoming] Generic message event:', evt.type, evt.data?.substring(0, 100));
   };
 
-  es.addEventListener('games', (evt) => {
-    console.log('[Upcoming] games event received, data length:', evt.data?.length);
-    if (currentMode !== 'upcoming') {
-      console.log('[Upcoming] Ignoring - mode is', currentMode);
-      return;
-    }
-    const payload = safeJsonParse(evt?.data);
-    if (!payload) {
-      console.error('[Upcoming] Failed to parse games payload');
-      return;
-    }
-
-    upcomingGames = payload.games || [];
-    console.log('[Upcoming] Parsed', upcomingGames.length, 'games');
-    renderUpcomingGames();
-  });
-
+      es.addEventListener('games', (evt) => {
+          console.log('[Upcoming] games event received, data length:', evt.data?.length);
+          if (currentMode !== 'upcoming') {
+              console.log('[Upcoming] Ignoring - mode is', currentMode);
+              return;
+          }
+          const payload = safeJsonParse(evt?.data);
+          if (!payload) {
+              console.error('[Upcoming] Failed to parse games payload');
+              return;
+          }
+  
+          upcomingGames = payload.games || [];
+          console.log('[Upcoming] Parsed', upcomingGames.length, 'games');
+          renderUpcomingGames();
+      });
+  
+      es.addEventListener('counts', (evt) => {
+          if (currentMode !== 'upcoming') return;
+          const payload = safeJsonParse(evt?.data);
+          if (!payload) return;
+  
+          sportsCountsUpcoming = new Map();
+          payload.sports.forEach(s => sportsCountsUpcoming.set(String(s.name).toLowerCase(), s.count));
+          totalGamesUpcoming = payload.total_games;
+          if (typeof renderSportsList === 'function') {
+              renderSportsList();
+          }
+      });
   es.addEventListener('odds', (evt) => {
     if (currentMode !== 'upcoming') return;
     const payload = safeJsonParse(evt?.data);

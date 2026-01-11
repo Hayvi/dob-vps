@@ -13,10 +13,12 @@ let sportsWithResults = null;
 let sportsCountsPrematch = null;
 let sportsCountsLive = null;
 let sportsCountsResults = null;
+let sportsCountsUpcoming = null;
 
 let totalGamesPrematch = null;
 let totalGamesLive = null;
 let totalGamesResults = null;
+let totalGamesUpcoming = null;
 
 // Sport icons mapping
 const sportIcons = {

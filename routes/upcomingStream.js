@@ -45,6 +45,10 @@ function registerUpcomingStreamRoute(app, { scraper }) {
         const initialData = sub.getData();
         const games = flattenGames(initialData);
         sendEvent('games', { games, count: games.length });
+        const { counts, totalGames } = calculateCounts(initialData);
+        if (counts) {
+            sendEvent('counts', { sports: counts, total_games: totalGames });
+        }
 
         // Add listener for updates
         const listener = (fullData, delta) => {
@@ -53,6 +57,10 @@ function registerUpcomingStreamRoute(app, { scraper }) {
             sendEvent('games', { games, count: games.length });
             if (Object.keys(odds).length > 0) {
                 sendEvent('odds', odds);
+            }
+            const { counts, totalGames } = calculateCounts(fullData);
+            if (counts) {
+                sendEvent('counts', { sports: counts, total_games: totalGames });
             }
         };
         sub.addListener(listener);
@@ -82,6 +90,27 @@ function registerUpcomingStreamRoute(app, { scraper }) {
             }
         });
     });
+
+    function calculateCounts(data) {
+        const counts = [];
+        let totalGames = 0;
+        if (!data?.sport) return { counts, totalGames };
+    
+        for (const sport of Object.values(data.sport)) {
+            let sportGameCount = 0;
+            for (const region of Object.values(sport?.region || {})) {
+                for (const comp of Object.values(region?.competition || {})) {
+                    sportGameCount += Object.keys(comp?.game || {}).length;
+                }
+            }
+    
+            if (sportGameCount > 0) {
+                counts.push({ name: sport.name, count: sportGameCount });
+                totalGames += sportGameCount;
+            }
+        }
+        return { counts, totalGames };
+    }
 
     function flattenGames(data) {
         const games = [];

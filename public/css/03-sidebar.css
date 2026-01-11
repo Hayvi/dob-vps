@@ -127,6 +127,7 @@
   overflow-y: auto;
   padding: 6px;
   -webkit-overflow-scrolling: touch;
+  height: 100%;
 }
 
 .sport-item {
