@@ -23,8 +23,9 @@ function stopUpcomingStream() {
 function startUpcomingStream(hours = 2) {
   if (currentMode !== 'upcoming') return;
 
-  // Reuse existing stream if same hours
+  // Reuse existing stream if same hours - just re-render cached games
   if (upcomingStreamSource && upcomingStreamHours === hours && upcomingStreamSource.readyState !== 2) {
+    renderUpcomingGames();
     return;
   }
 
