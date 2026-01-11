@@ -7,13 +7,16 @@
 }
 
 /* Pagination styles */
-.pagination-header, .pagination-footer {
+.pagination-element {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.pagination-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
   margin-bottom: 16px;
   font-size: 14px;
 }
@@ -38,7 +41,7 @@
 }
 
 .pagination-controls .btn.active {
-  background: var(--accent-color);
+  background: var(--accent-green);
   color: white;
 }
 

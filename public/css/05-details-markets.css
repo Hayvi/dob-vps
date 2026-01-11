@@ -657,7 +657,7 @@
 .period-total {
   font-size: 14px;
   font-weight: 700;
-  color: var(--accent-color);
+  color: var(--accent-green);
   min-width: 24px;
   text-align: center;
 }
@@ -728,7 +728,7 @@
 }
 
 .live-stat-value.left {
-  color: var(--accent-color);
+  color: var(--accent-green);
 }
 
 .live-stat-value.right {
@@ -752,7 +752,7 @@
 }
 
 .live-stat-bar.left {
-  background: var(--accent-color);
+  background: var(--accent-green);
   position: absolute;
   left: 0;
 }
@@ -803,7 +803,7 @@
 }
 
 .live-event-time {
-  color: var(--accent-color);
+  color: var(--accent-green);
   font-weight: 600;
   min-width: 32px;
 }
