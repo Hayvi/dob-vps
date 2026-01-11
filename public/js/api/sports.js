@@ -61,6 +61,41 @@ async function ensureLiveSportsLoaded(forceRefresh = false) {
   }
 }
 
+async function ensureUpcomingSportsLoaded(forceRefresh = false, hours = 2) {
+  if (!forceRefresh && sportsCountsUpcoming instanceof Map && Number.isFinite(totalGamesUpcoming)) return;
+  try {
+    const res = await fetch(`/api/upcoming-sports?hours=${encodeURIComponent(hours)}&_=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) {
+      sportsCountsUpcoming = null;
+      totalGamesUpcoming = null;
+      updateModeButtons();
+      return;
+    }
+
+    const data = await res.json();
+    const sports = Array.isArray(data?.sports) ? data.sports : [];
+    const counts = new Map();
+
+    for (const s of sports) {
+      if (!s) continue;
+      const name = s?.name;
+      if (!name) continue;
+      counts.set(String(name).toLowerCase(), Number(s?.count) || 0);
+    }
+
+    sportsCountsUpcoming = counts;
+    totalGamesUpcoming = Number(data?.total_games);
+    if (!Number.isFinite(totalGamesUpcoming)) {
+      totalGamesUpcoming = Array.from(counts.values()).reduce((sum, c) => sum + (Number(c) || 0), 0);
+    }
+    updateModeButtons();
+  } catch (e) {
+    sportsCountsUpcoming = null;
+    totalGamesUpcoming = null;
+    updateModeButtons();
+  }
+}
+
 async function ensurePrematchSportsLoaded(forceRefresh = false) {
   if (!forceRefresh && sportsWithPrematchGames instanceof Set) return;
   try {
@@ -109,7 +144,8 @@ async function ensureAllSportsLoaded(forceRefresh = false) {
   await Promise.all([
     ensureLiveSportsLoaded(forceRefresh),
     ensurePrematchSportsLoaded(forceRefresh),
-    ensureResultsSportsLoaded(forceRefresh)
+    ensureResultsSportsLoaded(forceRefresh),
+    ensureUpcomingSportsLoaded(forceRefresh)
   ]);
 }
 

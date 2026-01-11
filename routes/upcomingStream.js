@@ -1,12 +1,192 @@
-const { buildOddsArrFromMarket, pickPreferredMarketFromEmbedded } = require('../lib/liveStream/odds');
+const {
+    getSportMainMarketTypePriority,
+    buildOddsArrFromMarket,
+    pickPreferredMarketFromEmbedded
+} = require('../lib/liveStream/odds');
+const { unwrapSwarmData } = require('../lib/swarm/unwrap');
+const { getOddsFp } = require('../lib/liveStream/fingerprints');
 
 function registerUpcomingStreamRoute(app, { scraper }) {
     // Active subscriptions per hours value
     const upcomingSubscriptions = new Map();
     const clientsByHours = new Map();
 
+    const ODDS_GAME_CHUNK_SIZE = 160;
+    const ODDS_THROTTLE_MS = 2500;
+    const oddsStateByHours = new Map();
+
+    const getOddsState = (hours) => {
+        const key = String(hours);
+        let st = oddsStateByHours.get(key);
+        if (!st) {
+            st = {
+                inFlight: false,
+                lastFetchAt: 0,
+                lastFpByGame: new Map(),
+                lastOddsByGame: new Map()
+            };
+            oddsStateByHours.set(key, st);
+        }
+        return st;
+    };
+
+    const getCachedOddsSnapshotForGames = (hours, games) => {
+        const st = getOddsState(hours);
+        const byGame = st.lastOddsByGame instanceof Map ? st.lastOddsByGame : null;
+        if (!byGame || byGame.size === 0) return {};
+
+        const payload = {};
+        for (const g of Array.isArray(games) ? games : []) {
+            const gid = g?.id;
+            if (gid === undefined || gid === null) continue;
+            const cached = byGame.get(String(gid));
+            if (!Array.isArray(cached) || cached.length === 0) continue;
+            payload[String(gid)] = cached;
+        }
+        return payload;
+    };
+
+    const fetchOddsUpdatesForGames = async (hours, games) => {
+        const st = getOddsState(hours);
+        const now = Date.now();
+        if (st.inFlight) return null;
+        if (now - (st.lastFetchAt || 0) < ODDS_THROTTLE_MS) return null;
+
+        const list = Array.isArray(games) ? games : [];
+        const metasById = new Map();
+        const ids = [];
+        for (const g of list) {
+            const gid = Number.parseInt(String(g?.id ?? ''), 10);
+            if (!Number.isFinite(gid)) continue;
+            const key = String(gid);
+            if (!metasById.has(key)) {
+                metasById.set(key, {
+                    sport_name: g?.sport_name || g?.sportAlias || g?.sport_alias || ''
+                });
+                ids.push(gid);
+            }
+        }
+        if (ids.length === 0) return null;
+
+        st.inFlight = true;
+        try {
+            const allTypes = ['P1XP2', 'W1XW2', '1X2', 'MATCH_RESULT', 'MATCHRESULT', 'P1P2', 'W1W2'];
+            const prevFpByGame = st.lastFpByGame instanceof Map ? st.lastFpByGame : new Map();
+            const nextFpByGame = new Map(prevFpByGame);
+            const lastOddsByGame = st.lastOddsByGame instanceof Map ? st.lastOddsByGame : new Map();
+            const updates = {};
+
+            const tryPickOdds = (embedded, typePriority) => {
+                if (!embedded || typeof embedded !== 'object') return null;
+                const marketMap = embedded?.market;
+                const preferred = pickPreferredMarketFromEmbedded(marketMap, typePriority);
+                const preferredArr = buildOddsArrFromMarket(preferred);
+                if (preferred && preferredArr) return { market: preferred, oddsArr: preferredArr };
+
+                const markets = marketMap && typeof marketMap === 'object' ? Object.values(marketMap).filter(Boolean) : [];
+                markets.sort((a, b) => (a?.order ?? Number.MAX_SAFE_INTEGER) - (b?.order ?? Number.MAX_SAFE_INTEGER));
+                for (const m of markets) {
+                    const arr = buildOddsArrFromMarket(m);
+                    if (arr) return { market: m, oddsArr: arr };
+                }
+                return null;
+            };
+
+            for (let i = 0; i < ids.length; i += ODDS_GAME_CHUNK_SIZE) {
+                const chunk = ids.slice(i, i + ODDS_GAME_CHUNK_SIZE);
+
+                const rawOdds = await scraper.sendRequest('get', {
+                    source: 'betting',
+                    what: {
+                        game: ['id', 'market', 'markets_count'],
+                        market: ['id', 'name', 'type', 'order', 'col_count', 'mobile_col_count', 'display_key', 'event', 'is_blocked', 'cashout', 'available_for_betbuilder', 'group_id', 'group_name', 'group_order', 'display_color', 'market_type', 'display_sub_key', 'sequence', 'point_sequence', 'optimal', 'name_template', 'express_id', 'is_new'],
+                        event: ['id', 'name', 'price', 'order', 'original_order', 'alt_order', 'type', 'type_1', 'base', 'is_blocked', 'home_value', 'away_value', 'type_id']
+                    },
+                    where: {
+                        game: { id: { '@in': chunk } },
+                        market: { type: { '@in': allTypes } }
+                    }
+                }, 90000);
+
+                const oddsData = unwrapSwarmData(rawOdds);
+                const oddsGames = oddsData?.game && typeof oddsData.game === 'object' ? oddsData.game : {};
+
+                for (const gid of chunk) {
+                    const embedded = oddsGames[String(gid)];
+                    const meta = metasById.get(String(gid)) || {};
+                    const typePriority = getSportMainMarketTypePriority(meta?.sport_name);
+                    const picked = tryPickOdds(embedded, typePriority);
+                    if (!picked) continue;
+                    const { market, oddsArr } = picked;
+
+                    const fp = getOddsFp(market);
+                    if (!fp) continue;
+                    if (fp === prevFpByGame.get(String(gid))) continue;
+
+                    nextFpByGame.set(String(gid), fp);
+                    lastOddsByGame.set(String(gid), oddsArr);
+                    updates[String(gid)] = oddsArr;
+                }
+
+                const missingIds = [];
+                for (const gid of chunk) {
+                    const key = String(gid);
+                    if (updates[key]) continue;
+                    if (lastOddsByGame.has(key)) continue;
+                    missingIds.push(gid);
+                }
+
+                if (missingIds.length > 0) {
+                    const rawFallbackOdds = await scraper.sendRequest('get', {
+                        source: 'betting',
+                        what: {
+                            game: ['id', 'market', 'markets_count'],
+                            market: ['id', 'name', 'type', 'order', 'col_count', 'mobile_col_count', 'display_key', 'event', 'is_blocked', 'cashout', 'available_for_betbuilder', 'group_id', 'group_name', 'group_order', 'display_color', 'market_type', 'display_sub_key', 'sequence', 'point_sequence', 'optimal', 'name_template', 'express_id', 'is_new'],
+                            event: ['id', 'name', 'price', 'order', 'original_order', 'alt_order', 'type', 'type_1', 'base', 'is_blocked', 'home_value', 'away_value', 'type_id']
+                        },
+                        where: {
+                            game: { id: { '@in': missingIds } }
+                        }
+                    }, 90000);
+
+                    const fallbackData = unwrapSwarmData(rawFallbackOdds);
+                    const fallbackGames = fallbackData?.game && typeof fallbackData.game === 'object' ? fallbackData.game : {};
+
+                    for (const gid of missingIds) {
+                        const embedded = fallbackGames[String(gid)];
+                        const meta = metasById.get(String(gid)) || {};
+                        const typePriority = getSportMainMarketTypePriority(meta?.sport_name);
+                        const picked = tryPickOdds(embedded, typePriority);
+                        if (!picked) continue;
+                        const { market, oddsArr } = picked;
+
+                        const fp = getOddsFp(market);
+                        if (!fp) continue;
+                        if (fp === prevFpByGame.get(String(gid))) continue;
+
+                        nextFpByGame.set(String(gid), fp);
+                        lastOddsByGame.set(String(gid), oddsArr);
+                        updates[String(gid)] = oddsArr;
+                    }
+                }
+            }
+
+            st.lastFpByGame = nextFpByGame;
+            st.lastOddsByGame = lastOddsByGame;
+            st.lastFetchAt = Date.now();
+            return updates;
+        } catch (e) {
+            console.error('Failed to fetch upcoming odds:', e?.message || e);
+            return null;
+        } finally {
+            st.inFlight = false;
+        }
+    };
+
     app.get('/api/upcoming-stream', async (req, res) => {
         const hours = Math.min(Math.max(parseInt(req.query.hours) || 2, 1), 24);
+
+        let oddsRetryTimeoutId = null;
 
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
@@ -50,14 +230,45 @@ function registerUpcomingStreamRoute(app, { scraper }) {
             sendEvent('counts', { sports: counts, total_games: totalGames });
         }
 
+        const cachedSnapshot = getCachedOddsSnapshotForGames(hours, games);
+        if (cachedSnapshot && Object.keys(cachedSnapshot).length > 0) {
+            sendEvent('odds', cachedSnapshot);
+        }
+
+        fetchOddsUpdatesForGames(hours, games)
+            .then((updates) => {
+                if (updates === null) {
+                    oddsRetryTimeoutId = setTimeout(() => {
+                        oddsRetryTimeoutId = null;
+                        fetchOddsUpdatesForGames(hours, games)
+                            .then((nextUpdates) => {
+                                if (nextUpdates && Object.keys(nextUpdates).length > 0) {
+                                    sendEvent('odds', nextUpdates);
+                                }
+                            })
+                            .catch(() => {});
+                    }, ODDS_THROTTLE_MS + 250);
+                    return;
+                }
+                if (updates && Object.keys(updates).length > 0) {
+                    sendEvent('odds', updates);
+                }
+            })
+            .catch(() => {});
+
         // Add listener for updates
         const listener = (fullData, delta) => {
             const games = flattenGames(fullData);
-            const odds = extractOddsFromGames(fullData);
             sendEvent('games', { games, count: games.length });
-            if (Object.keys(odds).length > 0) {
-                sendEvent('odds', odds);
-            }
+
+            fetchOddsUpdatesForGames(hours, games)
+                .then((updates) => {
+                    if (updates && Object.keys(updates).length > 0) {
+                        sendEvent('odds', updates);
+                    }
+                })
+                .catch(() => {});
+
             const { counts, totalGames } = calculateCounts(fullData);
             if (counts) {
                 sendEvent('counts', { sports: counts, total_games: totalGames });
@@ -73,6 +284,10 @@ function registerUpcomingStreamRoute(app, { scraper }) {
         // Cleanup on disconnect
         req.on('close', () => {
             clearInterval(keepalive);
+            if (oddsRetryTimeoutId) {
+                clearTimeout(oddsRetryTimeoutId);
+                oddsRetryTimeoutId = null;
+            }
             clientsByHours.get(hours)?.delete(clientId);
 
             // Cleanup subscription if no clients
@@ -85,6 +300,7 @@ function registerUpcomingStreamRoute(app, { scraper }) {
                             upcomingSubscriptions.delete(hours);
                             console.log(`Upcoming subscription (${hours}h) cleaned up`);
                         }
+                        oddsStateByHours.delete(String(hours));
                     }
                 }, 30000);
             }

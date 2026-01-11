@@ -40,6 +40,8 @@ function registerLiveCountRoutes(app, { scraper, noStore }) {
     let prematchSportsCache = null;
     let prematchSportsCacheExpiresAt = 0;
 
+    const upcomingSportsCacheByHours = new Map();
+
     // SSE counts stream
     const countsClients = new Set();
     let countsIntervalId = null;
@@ -336,6 +338,63 @@ function registerLiveCountRoutes(app, { scraper, noStore }) {
             res.json({
                 source: 'swarm',
                 cached: false,
+                count: sports.length,
+                total_games: totalGames,
+                sports,
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    app.get('/api/upcoming-sports', async (req, res) => {
+        try {
+            noStore(res);
+
+            const hours = Math.min(Math.max(parseInt(req.query.hours) || 2, 1), 24);
+            const now = Date.now();
+
+            const cached = upcomingSportsCacheByHours.get(String(hours));
+            if (cached && cached.expiresAt > now) {
+                const totalGames = Array.isArray(cached.sports)
+                    ? cached.sports.reduce((sum, s) => sum + (Number(s?.count) || 0), 0)
+                    : 0;
+                return res.json({
+                    source: 'swarm',
+                    cached: true,
+                    hours,
+                    count: Array.isArray(cached.sports) ? cached.sports.length : 0,
+                    total_games: totalGames,
+                    sports: Array.isArray(cached.sports) ? cached.sports : [],
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            const seconds = hours * 3600;
+            const rawData = await scraper.sendRequest('get', {
+                source: 'betting',
+                what: { sport: ['id', 'name'], game: ['id'] },
+                where: {
+                    sport: { type: { '@nin': [1, 4] } },
+                    game: {
+                        type: { '@in': [0, 2] },
+                        start_ts: { '@now': { '@gte': 0, '@lte': seconds } }
+                    }
+                }
+            });
+
+            const { sports, totalGames } = extractSportsCountsFromSwarm(rawData);
+
+            upcomingSportsCacheByHours.set(String(hours), {
+                sports,
+                expiresAt: now + 60 * 1000
+            });
+
+            res.json({
+                source: 'swarm',
+                cached: false,
+                hours,
                 count: sports.length,
                 total_games: totalGames,
                 sports,

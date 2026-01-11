@@ -3,6 +3,7 @@ let upcomingStreamSource = null;
 let upcomingStreamHours = 2;
 let upcomingStreamRetryTimeoutId = null;
 let upcomingGames = [];
+let pendingUpcomingOdds = {};
 
 function isUpcomingStreamActive() {
   return Boolean(upcomingStreamSource && upcomingStreamSource.readyState !== 2);
@@ -66,8 +67,34 @@ function startUpcomingStream(hours = 2) {
               console.error('[Upcoming] Failed to parse games payload');
               return;
           }
-  
-          upcomingGames = payload.games || [];
+
+          const prevById = new Map();
+          for (const g of Array.isArray(upcomingGames) ? upcomingGames : []) {
+            const id = g?.id;
+            if (id === undefined || id === null) continue;
+            prevById.set(String(id), g);
+          }
+
+          const next = Array.isArray(payload.games) ? payload.games : [];
+          for (const g of next) {
+            const prev = prevById.get(String(g?.id));
+            if (!prev) continue;
+            if (prev.__mainOdds && !g.__mainOdds) g.__mainOdds = prev.__mainOdds;
+            if (prev.__clientId && !g.__clientId) g.__clientId = prev.__clientId;
+          }
+
+          if (pendingUpcomingOdds && typeof pendingUpcomingOdds === 'object') {
+            for (const g of next) {
+              const gid = g?.id;
+              if (gid === undefined || gid === null) continue;
+              const cached = pendingUpcomingOdds[String(gid)];
+              if (!cached) continue;
+              g.__mainOdds = cached;
+              delete pendingUpcomingOdds[String(gid)];
+            }
+          }
+
+          upcomingGames = next;
           console.log('[Upcoming] Parsed', upcomingGames.length, 'games');
           renderUpcomingGames();
       });
@@ -80,6 +107,9 @@ function startUpcomingStream(hours = 2) {
           sportsCountsUpcoming = new Map();
           payload.sports.forEach(s => sportsCountsUpcoming.set(String(s.name).toLowerCase(), s.count));
           totalGamesUpcoming = payload.total_games;
+          if (typeof updateModeButtons === 'function') {
+              updateModeButtons();
+          }
           if (typeof renderSportsList === 'function') {
               renderSportsList();
           }
@@ -92,7 +122,12 @@ function startUpcomingStream(hours = 2) {
     // Apply odds to games
     for (const [gameId, odds] of Object.entries(payload)) {
       const game = upcomingGames.find(g => String(g.id) === String(gameId));
-      if (game) game.__mainOdds = odds;
+      if (game) {
+        game.__mainOdds = odds;
+      } else {
+        if (!pendingUpcomingOdds || typeof pendingUpcomingOdds !== 'object') pendingUpcomingOdds = {};
+        pendingUpcomingOdds[String(gameId)] = odds;
+      }
     }
     renderUpcomingGames();
   });
@@ -144,7 +179,12 @@ function renderUpcomingGames() {
       
       const odds = game.__mainOdds || [];
       const oddsHtml = odds.length > 0 
-        ? odds.map(o => `<span class="odd-btn${o.blocked ? ' blocked' : ''}">${o.blocked ? '🔒' : o.price?.toFixed(2) || '-'}</span>`).join('')
+        ? odds.map(o => {
+            if (o?.blocked) return `<span class="odd-btn blocked">🔒</span>`;
+            const p = Number(o?.price);
+            const txt = Number.isFinite(p) ? p.toFixed(2) : '-';
+            return `<span class="odd-btn">${txt}</span>`;
+          }).join('')
         : '<span class="odd-btn">-</span><span class="odd-btn">-</span><span class="odd-btn">-</span>';
 
       html += `<div class="game-row upcoming-game" data-game-id="${game.id}">
@@ -162,6 +202,23 @@ function renderUpcomingGames() {
 
   console.log('[Upcoming] Setting innerHTML, html length:', html.length);
   container.innerHTML = html;
+
+  // Click to open details
+  container.onclick = (e) => {
+    const row = e?.target?.closest ? e.target.closest('.game-row.upcoming-game') : null;
+    if (!row) return;
+    const gid = row.getAttribute('data-game-id');
+    if (!gid) return;
+    const game = upcomingGames.find(g => String(g?.id) === String(gid));
+    if (!game) return;
+    if (!game.__clientId) game.__clientId = String(game.id);
+    if (typeof selectGame === 'function') {
+      selectGame(game, row);
+      return;
+    }
+    selectedGame = game;
+    if (typeof showGameDetails === 'function') showGameDetails(game);
+  };
 }
 
 function escapeHtml(str) {

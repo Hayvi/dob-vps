@@ -16,7 +16,7 @@ function stopLiveGameStream() {
 
 function startLiveGameStream(gameId) {
   // Allow real-time updates for both live and prematch modes
-  if (currentMode !== 'live' && currentMode !== 'prematch') return;
+  if (currentMode !== 'live' && currentMode !== 'prematch' && currentMode !== 'upcoming') return;
   const key = gameId ? String(gameId) : null;
   if (!key) return;
 
@@ -33,7 +33,7 @@ function startLiveGameStream(gameId) {
 
   es.addEventListener('game', (evt) => {
     // Allow updates for both live and prematch modes
-    if (currentMode !== 'live' && currentMode !== 'prematch') return;
+    if (currentMode !== 'live' && currentMode !== 'prematch' && currentMode !== 'upcoming') return;
     if (!selectedGame) return;
     const payload = safeJsonParse(evt?.data);
     if (!payload) return;
@@ -91,7 +91,7 @@ function startLiveGameStream(gameId) {
 
   es.onerror = () => {
     // Stop if not in live or prematch mode
-    if (currentMode !== 'live' && currentMode !== 'prematch') {
+    if (currentMode !== 'live' && currentMode !== 'prematch' && currentMode !== 'upcoming') {
       stopLiveGameStream();
       return;
     }
@@ -108,7 +108,7 @@ function startLiveGameStream(gameId) {
 
     liveGameRetryTimeoutId = setTimeout(() => {
       liveGameRetryTimeoutId = null;
-      if (currentMode === 'live' || currentMode === 'prematch') startLiveGameStream(gid);
+      if (currentMode === 'live' || currentMode === 'prematch' || currentMode === 'upcoming') startLiveGameStream(gid);
     }, 5000);
   };
 }

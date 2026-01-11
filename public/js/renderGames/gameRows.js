@@ -206,7 +206,7 @@ function selectGame(game, rowElement) {
   const isLive = Number(game?.type) === 1;
   
   // Start real-time stream for both live and prematch modes
-  if ((currentMode === 'live' || currentMode === 'prematch') && serverGameId && typeof startLiveGameStream === 'function') {
+  if ((currentMode === 'live' || currentMode === 'prematch' || currentMode === 'upcoming') && serverGameId && typeof startLiveGameStream === 'function') {
     startLiveGameStream(serverGameId);
   } else if (typeof stopLiveGameStream === 'function') {
     stopLiveGameStream();
