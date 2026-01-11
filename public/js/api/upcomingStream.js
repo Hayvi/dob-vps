@@ -95,6 +95,7 @@ function startUpcomingStream(hours = 2) {
 
 function renderUpcomingGames() {
   const container = document.getElementById('gamesList');
+  console.log('[Upcoming] renderUpcomingGames called, container:', !!container, 'mode:', currentMode, 'games:', upcomingGames.length);
   if (!container || currentMode !== 'upcoming') return;
 
   // Update count
@@ -143,6 +144,7 @@ function renderUpcomingGames() {
     html += '</div>';
   }
 
+  console.log('[Upcoming] Setting innerHTML, html length:', html.length);
   container.innerHTML = html;
 }
 
