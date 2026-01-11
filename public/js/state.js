@@ -60,20 +60,54 @@ function setMode(mode) {
   const activeBtn = document.getElementById(`mode${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
   if (activeBtn) activeBtn.classList.add('active');
 
-  // Hide time filters for non-prematch modes
   const timeFiltersEl = document.getElementById('timeFilters');
   if (timeFiltersEl) {
     timeFiltersEl.classList.toggle('hidden', mode !== 'prematch');
   }
 
+  // Manage view containers
+  const regionsTreeEl = document.getElementById('regionsTree');
+  const gamesListEl = document.getElementById('gamesList');
+  
+  if (mode === 'upcoming') {
+    if (regionsTreeEl) regionsTreeEl.classList.add('hidden');
+    if (gamesListEl) gamesListEl.classList.remove('hidden');
+  } else if (mode === 'prematch' && typeof activeTimeFilter !== 'undefined' && activeTimeFilter !== 0) {
+    // Filtered prematch also uses gamesList, but let loadFilteredPrematchGames manage it
+    if (regionsTreeEl) regionsTreeEl.classList.add('hidden');
+    if (gamesListEl) gamesListEl.classList.remove('hidden');
+  }
+  else {
+    if (regionsTreeEl) regionsTreeEl.classList.remove('hidden');
+    if (gamesListEl) gamesListEl.classList.add('hidden');
+  }
+
   // Trigger data refresh
-  renderSportsList();
+  (async () => {
+    if (typeof ensureAllSportsLoaded === 'function') {
+      await ensureAllSportsLoaded(true);
+    }
+    if (typeof renderSportsList === 'function') {
+      renderSportsList();
+    }
+    const q = document.getElementById('sportSearch')?.value || '';
+    if (q && typeof filterSports === 'function') {
+      filterSports(q);
+    }
+  })();
 
   // Clear current games view to indicate switch
   currentGames = [];
-  const gamesListEl = document.getElementById('gamesList');
   if (gamesListEl) gamesListEl.innerHTML = '';
+  if (regionsTreeEl) regionsTreeEl.innerHTML = '';
   document.getElementById('gamesCount').textContent = '0 games';
+  
+  // Welcome screen should be hidden when a mode is explicitly chosen
+  const welcomeScreenEl = document.getElementById('welcomeScreen');
+  if(welcomeScreenEl) welcomeScreenEl.classList.add('hidden');
+  const gamesContainerEl = document.getElementById('gamesContainer');
+  if(gamesContainerEl) gamesContainerEl.classList.remove('hidden');
+
 
   if (mode === 'upcoming') {
     // Upcoming mode shows all sports - set header

@@ -321,28 +321,7 @@ function updateSidebarCountForFilter(count) {
   }
 }
 
-// Show/hide time filters based on mode
-function updateTimeFiltersVisibility() {
-  const container = document.getElementById('timeFilters');
-  if (!container) return;
-  
-  const regionsTree = document.getElementById('regionsTree');
-  const gamesList = document.getElementById('gamesList');
-  
-  if (currentMode === 'prematch') {
-    container.classList.remove('hidden');
-  } else {
-    container.classList.add('hidden');
-    // Reset to "All" when leaving prematch
-    activeTimeFilter = 0;
-    container.querySelectorAll('.time-filter-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.hours === '0');
-    });
-    // Restore normal view
-    if (regionsTree) regionsTree.classList.remove('hidden');
-    if (gamesList) gamesList.classList.add('hidden');
-  }
-}
+
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', initTimeFilters);

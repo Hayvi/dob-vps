@@ -1,31 +1,4 @@
 function setupEventListeners() {
-  // Tab switching
-  const onModeChanged = () => {
-    // Update time filters visibility
-    if (typeof updateTimeFiltersVisibility === 'function') {
-      updateTimeFiltersVisibility();
-    }
-    
-    (async () => {
-      // Initial load of sports data - SSE will handle real-time updates via counts-stream
-      await ensureAllSportsLoaded(true);
-      renderSportsList();
-
-      const q = document.getElementById('sportSearch')?.value || '';
-      if (q) filterSports(q);
-    })();
-  };
-
-  const modePrematchEl = document.getElementById('modePrematch');
-  const modeLiveEl = document.getElementById('modeLive');
-  const modeResultsEl = document.getElementById('modeResults');
-
-  if (modePrematchEl) modePrematchEl.addEventListener('click', onModeChanged);
-  if (modeLiveEl) modeLiveEl.addEventListener('click', onModeChanged);
-  if (modeResultsEl) modeResultsEl.addEventListener('click', onModeChanged);
-
-  onModeChanged();
-
   // Search
   document.getElementById('sportSearch').addEventListener('input', (e) => {
     filterSports(e.target.value);
